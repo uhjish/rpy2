@@ -1,0 +1,385 @@
+Release 2.1-dev
+===============
+
+New Features
+------------
+
+:mod:`rpy2.rinterface`:
+
+- New functions for specifying callback functions for R's front-ends:
+  :func:`setShowMessage`, :func:`setFlushConsole`, :func:`setChooseFile`, :func:`setShowFiles`
+
+- Wrapper for R_ProcessEvents (# suggested by June Kim to help with issues related to interactive display)
+
+- All callbacks are getting a get<callback> to complement the set<callback>.
+  (# patch submitted by Nathaniel Smith) 
+
+Changes
+-------
+
+:mod:`rpy2.rinterface`:
+
+- the default for reading and writing the console are now using sys.stdin and sys.stdout 
+  (# patch submitted by Nathaniel Smith)
+ 
+Bugs fixed
+----------
+
+- Failing to initialize R now throws a RuntimeError
+
+- Fix installation bug when the include directories contain either '-' or 'I'
+  #spotted by James Yoo
+
+
+Release 2.0.1
+=============
+
+New features
+------------
+
+:mod:`rpy2.robjects`:
+
+- Property `names` for the :class:`RVector` methods :meth:`getnames` 
+  and :meth:`setnames` (this was likely forgotten for Release 2.0.0).
+
+- Property `rclass` for :class:`RObjectMixin` 
+
+Changes
+-------
+
+:mod:`rpy2.robjects`:
+
+- :meth:`rclass` becomes :meth:`getrclass`
+
+Bugs fixed
+----------
+
+- Having the environment variable R_HOME specified resulted in an error
+  when importing :mod:`rpy2.rinterface` # root of the problem spotted by Peter
+
+- Setup.py has no longer a (possibly outdated) static hardcoded version number
+  for rpy2
+
+- Testing no longer stops with an error in the absence of the third-party
+  module :mod:`numpy`
+
+- :meth:`rpy2.rlike.container.TaggedList.pop` is now returning the element
+  matching the given index
+
+
+
+Release 2.0.0
+=============
+
+New features
+------------
+
+- New module :mod:`rpy2.robjects.conversion`.
+
+- New module :mod:`rpy2.robjects.numpy2ri` to convert :mod:`numpy` objects
+  into :mod:`rpy2` objects. 
+  # adapted from a patch contributed by Nathaniel Smith
+
+
+Changes
+-------
+
+- :meth:`RObject.__repr__` moved to :meth:`RObject.r_repr`
+
+
+Bugs fixed
+----------
+
+- Informative message returned as RuntimeError when failing to find R's HOME
+
+- Use the registry to find the R's HOME on win32
+  # snatched from Peter's earlier contribution to rpy-1.x
+
+
+Release 2.0.0rc1
+================
+
+:mod:`rpy2.rpy_classic`:
+
+- :meth:`rpy_classic.RObj.getSexp` moved to a 
+  property :attr:`rpy_classic.Robj.sexp`.
+
+:mod:`rpy2.robjects`:
+
+- :meth:`RObject.__repr__` moved to :meth:`RObject.r_repr`
+
+- :meth:`ri2py`, :meth:`ro2py`, and :meth:`py2ri` moved to the new module
+  :mod:`conversion`. Adding the prefix `conversion.` to calls
+  to those functions will be enough to update existing code
+
+
+Bugs fixed
+----------
+
+- Informative message returned as RuntimeError when failing to find R's HOME
+
+- Use the registry to find the R's HOME on win32
+  # snatched from Peter's earlier contribution to rpy-1.x
+
+
+Release 2.0.0rc1
+================
+
+New features
+------------
+
+- added :data:`__version__` to rpy2/__init__.py
+
+:mod:`rpy2.robjects`:
+
+- added classes :class:`StrVector`, :class:`IntVector`, :class:`FloatVector`, :class:`BoolVector`
+
+:mod:`rpy2.rinterface`:
+
+- added missing class :class:`BoolSexpVector`.
+
+
+Changes
+-------
+
+:mod:`rpy2.robjects`:
+
+- does not alias :class:`rinterface.StrSexpVector`, :class:`rinterface.IntSexpVector`, :class:`rinterface.FloatSexpVector` anymore
+
+- Constructor for :class:`rpy2.robjects.RDataFrame` checks that R lists are data.frames (not all lists are data.frame)
+
+- Formerly new attribute :attr:`_dotter` for :class:`R` is now gone. The documentaion now points to :mod:`rpy2.rpy_classic` for this sort of things.
+
+Bugs fixed
+----------
+
+- conditional typedef in rinterface.c to compile under win32 # reported and initial proposed fix from Paul Harrington
+
+- __pow__ was missing from the delegator object for robjects.RVector (while the documentation was claiming it was there) # bug report by Robert Nuske
+
+- Earlier change from Sexp.typeof() to getter Sexp.typeof was not reflected in :mod:`rpy2.rpy_classic` # bug report by Robert Denham
+
+ 
+Release 2.0.0b1
+===============
+
+New features
+------------
+
+:mod:`rpy2.robjects`:
+
+- added :meth:`setenvironment` for :class:`RFormula`, and defined `environment` as a property
+
+- defined `names` as a property for :class:`RVector`
+
+:mod:`rpy2.rinterface`:
+
+- added functions :func:`get_initoptions` and :func:`set_initoptions`.
+
+- new attribute :attr:`_dotter` for :class:`R` singleton. Setting it to True will translate '_' into '.' if the attribute is not found 
+
+Changes
+-------
+
+:mod:`rpy2.robjects`:
+
+- constructor for RDataFrame now now accepts either :class:`rlike.container.TaggedList` or :class:`rinterface.SexpVector`
+
+:mod:`rpy2.rinterface`:
+
+- :func:`sexpTypeEmbeddedR` is now called :func:`str_typeint`.
+
+- :attr:`initOptions` is now called :attr:`initoptions`. Changes of options can only be done through :func:`set_initoptions`.
+
+
+Bugs fixed
+----------
+
+- crash of :meth:`Sexp.enclos` when R not yet initialized (bug report #2078176)
+
+- potential crash of :meth:`Sexp.frame` when R not yet initialized
+
+- proper reference counting when handling, and deleting, :attr:`Sexp.__sexp__` generated CObjects
+
+- setup.py: get properly the include directories (no matter where they are) #bug report and fix adapted from Robert Nuske
+
+- setup.py: link to external lapack or blas library when relevant
+
+- added a MANIFEST.in ensuring that headers get included in the source distribution #missing headers reported by Nicholas Lewin-Koh
+
+- :func:`rinterface.str_typeint` was causing segfault when called with 99
+
+- fixed subsetting for LANGSXP objects
+
+
+Release 2.0.0a3
+===============
+
+New features
+------------
+
+:mod:`rpy2.rinterface`:
+
+- :func:`setReadConsole`: specify Python callback for console input
+
+- `R` string vectors can now be built from Python unicode objects
+
+- getter :attr:`__sexp__` to return an opaque C pointer to the underlying R object
+
+- method :meth:`rsame` to test if the underlying R objects for two :class:`Sexp` are the same.
+
+- added `emptyEnv` (R's C-level `R_EmptyEnv`)
+
+- added method :meth:`Sexp.do_slot_assign`
+
+:mod:`rpy2.robjects`:
+
+- R string vectors can now be built from Python unicode objects
+
+:mod:`rpy2.rlike`:
+
+- module :mod:`functional` with the functions :func:`tapply`, :func:`listify`, :func:`iterify`.
+
+- module :mod:`indexing` with the function :func:`order`
+
+- method :meth:`TaggedList.sort` now implemented
+
+ 
+Changes
+-------
+
+:mod:`rpy2.rinterface`:
+
+- :func:`initEmbeddedR` is only initializing if R is not started (no effect otherwise, and no exception thrown anymore)
+
+- the method :meth:`Sexp.typeof` was replaced by a Python `getter` :attr:`typeof`.
+
+- the method :meth:`Sexp.named` was replaced by a Python `getter` :attr:`named`.
+
+- R objects of type LANGSXP are now one kind of vector (... but this may change again)
+
+- R objects of type EXPRSXP are now handled as vectors (... but this may change again)
+
+- :func:`initEmbeddedR` renamed to :func:`initr`
+
+- :func:`endEmbeddedR` renamed to :func:`endr`
+
+
+:mod:`rpy2.robjects`:
+
+- :class:`R` remains a singleton, but does not throw an exception when multiple instances are requested
+
+
+Bugs fixed
+----------
+
+- unable to compile on Python2.4 (definition of aliases to Python2.5-specific were not where they should be).
+
+- overflow issues on Python 2.4/64 bits when indexing R vector with very large integers.
+
+- handling of negative indexes for :class:`SexpVector`'s :meth:`__getitem__` and :meth:`__setitem__` was missing
+
+- trying to create an instance of :class:`SexpVector` before initializing R raises a RuntimeException (used to segfault)
+
+- experimental method :meth:`enclos` was not properly exported
+
+- setup.py was exiting prematurely when R was compiled against an existing BLAS library
+
+- complex vectors should now be handled properly by :mod:`rpy2.rinterface.robjects`.
+
+- methods :meth:`rownames` and :meth:`colnames` for :class:`RDataFrame` were incorrect.
+
+Release 2.0.0a2
+===============
+
+New features
+------------
+
+:mod:`rpy2.rlike`:
+
+- package for R-like features in Python
+
+- module :mod:`rpy2.rlike.container` 
+
+- class :class:`ArgsDict` in :mod:`rpy2.rlike.container`
+
+- class :class:`TaggedList` in :mod:`rpy2.rlike.container`
+
+:mod:`rpy2.rinterface`:
+
+- method :meth:`named`, corresponding to R's C-level NAMED
+
+- experimental methods :meth:`frame` and :meth:`enclos` for SexpEnvironment corresponding to R's C-level FRAME and ENCLOS
+
+- method :meth:`rcall` for :class:`ClosureSexp`
+
+- new experimental class :class:`SexpLang` for R language objects.
+
+
+Bugs fixed
+----------
+
+- R stack checking is disabled (no longer crashes when multithreading)
+
+- fixed missing R_PreserveObject for vectors (causing R part of the object to sometimes vanish during garbage collection)
+
+- prevents calling an R function when R has been ended (raise :class:`RuntimeException`).
+
+
+Release 2.0.0a1
+===============
+
+New features
+------------
+
+:mod:`rpy2.robjects`:
+
+- method :meth:`getnames` for :class:`RVector`
+
+- experimental methods :meth:`__setitem__` and :meth:`setnames` for :class:`RVector`
+
+- method 'getnames' for :class:`RArray`
+
+- new class :class:`RFormula`
+
+- new helper class :class:`RVectorDelegator` (see below)
+
+- indexing RVector the "R way" with subset is now possible through a delegating attribute (e.g., myvec.r[True] rather than myvec.subset(True)). #suggested by Michael Sorich
+
+- new class :class:`RDataFrame`. The constructor :meth:`__init__` is still experimental (need for an ordered dictionnary, that will be in before the beta
+
+- filled documentation about mapping between objects
+
+Changes
+-------
+
+- many fixes and additions to the documentation
+
+- improved GTK console in the demos
+
+- changed the major version number to 2 in order to avoid confusion with rpy 1.x # Suggested by Peter and Gregory Warnes
+
+- moved test.py to demos/example01.py
+
+:mod:`rpy2.robjects`:
+
+- changed method name `getNames` to `getnames` where available (all lower-case names for methods seems to be the accepted norm in Python).
+
+
+Bugs fixed
+----------
+
+:mod:`rpy2.robjects`:
+
+- fixed string representation of R object on Microsoft Windows (using fifo, not available on win32)
+
+- :meth:`__getattr__` for :class:`RS4` is now using :meth:`ri2py` 
+
+:mod:`rpy2.rinterface`:
+
+- fixed context of evaluation for R functions (now R_GlobalEnv)
+
+Release 1.0a0
+=============
+
+- first public release
