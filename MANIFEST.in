@@ -1,0 +1,24 @@
+global-include debian* README
+global-exclude *patch* *diff* .svn
+
+include MANIFEST
+include NEWS README AUTHORS
+include MPL_LICENSE GPL_LICENSE LGPL_LICENSE
+include rpy/rinterface/rinterface.h
+include rpy/rinterface/rinterface.c
+include rpy/rinterface/array.c
+include rpy/rinterface/array.h
+include rpy/rinterface/r_utils.c
+include rpy/rinterface/r_utils.h
+include rpy/rinterface/rpy_device.c
+include rpy/rinterface/rpy_device.h
+
+include debian/*
+
+prune debian/.svn
+prune CVS
+prune dist
+
+include doc/Makefile
+include doc/source
+
