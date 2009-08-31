@@ -121,7 +121,7 @@ def grid_conversion(robj):
         try:
             cls = _grid_dict[rclass[0]]
             pyobj = cls(pyobj)
-        except KeyError, ke:
+        except KeyError as ke:
             pass
 
     return pyobj

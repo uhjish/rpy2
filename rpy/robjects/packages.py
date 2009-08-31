@@ -84,7 +84,7 @@ def wherefrom(symbol, startenv = rinterface.globalenv):
         try:
             obj = env[symbol]
             tryagain = False
-        except LookupError, knf:
+        except LookupError as knf:
             env = env.enclos()
             if env.rsame(rinterface.emptyenv):
                 tryagain = False

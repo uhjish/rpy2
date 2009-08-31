@@ -34,12 +34,12 @@ class RS4_Type(type):
 
         try:
             cls_rname = cls_dict['__rname__']
-        except KeyError, ke:
+        except KeyError as ke:
             cls_rname = name
 
         try:
             accessors = cls_dict['__accessors__']
-        except KeyError, ke:
+        except KeyError as ke:
             accessors = []
             
         for rname, where, \
