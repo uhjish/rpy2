@@ -50,7 +50,7 @@ def default_ri2py(o):
     res = None
     try:
         rcls = o.do_slot("class")[0]
-    except LookupError, le:
+    except LookupError as le:
         rcls = None
 
     if isinstance(o, RObject):
@@ -65,7 +65,7 @@ def default_ri2py(o):
                     res = vectors.Matrix(o)
                 else:
                     res = vectors.Array(o)
-            except LookupError, le:
+            except LookupError as le:
                 if o.typeof == rinterface.INTSXP:
                     if rcls == 'factor':
                         res = vectors.FactorVector(o)
@@ -220,12 +220,12 @@ class R(object):
     def __getattribute__(self, attr):
         try:
             return super(R, self).__getattribute__(attr)
-        except AttributeError, ae:
+        except AttributeError as ae:
             orig_ae = ae
 
         try:
             return self[attr]
-        except LookupError, le:
+        except LookupError as le:
             raise orig_ae
 
     def __getitem__(self, item):

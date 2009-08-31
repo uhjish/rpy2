@@ -31,7 +31,7 @@ class EmbeddedRTestCase(unittest.TestCase):
         sys.stdout = tmp_file
         try:
             rinterface.consolePrint('haha')
-        except Exception, e:
+        except Exception as e:
             sys.stdout = stdout
             raise e
         sys.stdout = stdout
@@ -62,7 +62,7 @@ class EmbeddedRTestCase(unittest.TestCase):
         try:
             code = rinterface.SexpVector(["3", ], rinterface.STRSXP)
             rinterface.baseenv["print"](code)
-        except Exception, e:
+        except Exception as e:
             sys.stderr = stderr
             raise e
         sys.stderr = stderr
@@ -95,7 +95,7 @@ class EmbeddedRTestCase(unittest.TestCase):
         sys.stderr = tmp_file
         try:
             res = rinterface.baseenv.get("flush.console")()
-        except Exception, e:
+        except Exception as e:
             sys.stderr = stderr
             raise e
         sys.stderr = stderr
@@ -126,7 +126,7 @@ class EmbeddedRTestCase(unittest.TestCase):
         sys.stderr = tmp_file
         try:
             res = rinterface.baseenv["readline"]()
-        except Exception, e:
+        except Exception as e:
             sys.stderr = stderr
             raise e
         sys.stderr = stderr
@@ -165,9 +165,9 @@ class EmbeddedRTestCase(unittest.TestCase):
         sys.stderr = tmp_file
         try:
             res = rinterface.baseenv["file.choose"]()
-        except rinterface.RRuntimeError, rre:
+        except rinterface.RRuntimeError as rre:
             pass
-        except Exception, e:
+        except Exception as e:
             sys.stderr = stderr
             raise e
         sys.stderr = stderr
@@ -224,9 +224,9 @@ class EmbeddedRTestCase(unittest.TestCase):
             try:
                 tmp = rdate()
                 res = (False, None)
-            except RuntimeError, re:
+            except RuntimeError as re:
                 res = (True, re)
-            except Exception, e:
+            except Exception as e:
                 res = (False, e)
             queue.put(res)
         q = multiprocessing.Queue()

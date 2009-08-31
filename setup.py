@@ -5,7 +5,7 @@ from distutils.command.build import build as _build
 
 try:
     from setuptools import setup
-except ImportError, ie:
+except ImportError as ie:
     from distutils.core import setup
 from distutils.core import Extension
 

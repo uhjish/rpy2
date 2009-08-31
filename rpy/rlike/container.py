@@ -134,7 +134,7 @@ class TaggedList(list):
     def __add__(self, tl):
         try:
             tags = tl.tags
-        except AttributeError, ae:
+        except AttributeError as ae:
             raise ValueError('Can only concatenate TaggedLists.')
         res = TaggedList(list(self) + list(tl),
                          tags = self.tags + tl.tags)

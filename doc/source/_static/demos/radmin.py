@@ -588,7 +588,7 @@ class ConsolePanel(gtk.VBox):
                     res = res.rx2("value")
                 else:
                     res = None
-            except robjects.rinterface.RRuntimeError, rre:
+            except robjects.rinterface.RRuntimeError as rre:
                 res = str(rre)
 
         if res is not None:

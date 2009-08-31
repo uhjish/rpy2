@@ -50,7 +50,7 @@ class RObjectMixin(object):
     def _rclass_get(self):
         try:
             return self.__rclass(self)
-        except rpy2.rinterface.RRuntimeError, rre:
+        except rpy2.rinterface.RRuntimeError as rre:
             if self.typeof == rpy2.rinterface.SYMSXP:
                 #unevaluated expression: has no class
                 return (None, )
