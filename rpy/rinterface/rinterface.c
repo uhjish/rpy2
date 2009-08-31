@@ -452,7 +452,7 @@ EmbeddedR_ReadConsole(const char *prompt, unsigned char *buf,
     return 0;
   }
 
-  char *input_str = PyString_AsString(result);
+  char *input_str = PyBytes_AsString(result);
   if (! input_str) {
     Py_XDECREF(arglist);
     RPY_GIL_RELEASE(is_threaded, gstate);
@@ -582,7 +582,7 @@ EmbeddedR_ChooseFile(int new, char *buf, int len)
     return 0;
   }
 
-  char *path_str = PyString_AsString(result);
+  char *path_str = PyBytes_AsString(result);
   if (! path_str) {
     Py_DECREF(result);
     PyErr_SetString(PyExc_TypeError, 
@@ -649,10 +649,10 @@ EmbeddedR_ShowFiles(int nfile, const char **file, const char **headers,
   PyObject *arglist;
   PyObject *result;
 
-  PyObject *py_wtitle = PyString_FromString(wtitle);
+  PyObject *py_wtitle = PyUnicode_FromString(wtitle);
   PyObject *py_del;
   RPY_PY_FROM_RBOOL(py_del, del);
-  PyObject *py_pager = PyString_FromString(pager);
+  PyObject *py_pager = PyUnicode_FromString(pager);
 
   PyObject *py_fileheaders_tuple = PyTuple_New(nfile);
   PyObject *py_fileheader;
@@ -660,14 +660,14 @@ EmbeddedR_ShowFiles(int nfile, const char **file, const char **headers,
   for (f_i = 0; f_i < nfile; f_i++) {
     py_fileheader = PyTuple_New(2);
     if (PyTuple_SetItem(py_fileheader, 0,
-                        PyString_FromString(headers[f_i])) != 0) {
+                        PyUnicode_FromString(headers[f_i])) != 0) {
       Py_DECREF(py_fileheaders_tuple);
       /*FIXME: decref other PyObject arguments */
       RPY_GIL_RELEASE(is_threaded, gstate);
       return 0;
     }
     if (PyTuple_SetItem(py_fileheader, 1,
-                        PyString_FromString(file[f_i])) != 0) {
+                        PyUnicode_FromString(file[f_i])) != 0) {
       Py_DECREF(py_fileheaders_tuple);
       /*FIXME: decref other PyObject arguments */
       RPY_GIL_RELEASE(is_threaded, gstate);
@@ -939,7 +939,7 @@ static PyObject* EmbeddedR_init(PyObject *self)
   static int status;
   
   if (embeddedR_status & RPY_R_INITIALIZED) {
-    return PyInt_FromLong(status);
+    return PyLong_FromLong(status);
 /*     PyErr_Format(PyExc_RuntimeError, "R can only be initialized once."); */
 /*     return NULL; */
   }
@@ -951,7 +951,7 @@ static PyObject* EmbeddedR_init(PyObject *self)
   Py_ssize_t ii;
   for (ii = 0; ii < n_args; ii++) {
     opt_string = PyTuple_GetItem(initOptions, ii);
-    options[ii] = PyString_AsString(opt_string);
+    options[ii] = PyBytes_AsString(opt_string);
   }
 
 
@@ -1056,7 +1056,7 @@ static PyObject* EmbeddedR_init(PyObject *self)
   errMessage_SEXP = findVar(install("geterrmessage"), 
                             R_BaseNamespace);
 
-  PyObject *res = PyInt_FromLong(status);
+  PyObject *res = PyLong_FromLong(status);
 
 #ifdef RPY_VERBOSE
   printf("R initialized - status: %i\n", status);
@@ -1224,10 +1224,10 @@ Sexp_repr(PyObject *self)
    *  return NULL;
    *}
    */
-  return PyString_FromFormat("<%s - Python:\%p / R:\%p>",
-                             self->ob_type->tp_name,
-                             self,
-                             sexp);
+  return PyUnicode_FromFormat("<%s - Python:\%p / R:\%p>",
+			      self->ob_type->tp_name,
+			      self,
+			      sexp);
 }
 
 
@@ -1240,7 +1240,7 @@ Sexp_typeof_get(PyObject *self)
     PyErr_Format(PyExc_ValueError, "NULL SEXP.");
     return NULL;;
   }
-  return PyInt_FromLong(TYPEOF(sexp));
+  return PyLong_FromLong(TYPEOF(sexp));
 }
 PyDoc_STRVAR(Sexp_typeof_doc,
              "R internal SEXPREC type.");
@@ -1254,11 +1254,11 @@ Sexp_do_slot(PyObject *self, PyObject *name)
     PyErr_Format(PyExc_ValueError, "NULL SEXP.");
     return NULL;;
   }
-  if (! PyString_Check(name)) {
+  if (! PyUnicode_Check(name)) {
     PyErr_SetString(PyExc_TypeError, "The name must be a string.");
     return NULL;
   }
-  char *name_str = PyString_AS_STRING(name);
+  char *name_str = PyBytes_AS_STRING(name);
 
   if (! R_has_slot(sexp, install(name_str))) {
     PyErr_SetString(PyExc_LookupError, "The object has no such attribute.");
@@ -1325,7 +1325,7 @@ Sexp_named_get(PyObject *self)
     return NULL;;
   }
   unsigned int res = NAMED(sexp);
-  return PyInt_FromLong((long)res);
+  return PyLong_FromLong((long)res);
 }
 PyDoc_STRVAR(Sexp_named_doc,
 "Integer code for the R object reference-pseudo counting.\n\
@@ -1468,8 +1468,8 @@ Sexp___getstate__(PyObject *self)
           /* res = PyByteArray_FromStringAndSize(sexp_ser, len); */
 
   /*FIXME: is this working on 64bit archs ? */
-  res_string = PyString_FromStringAndSize((void *)RAW_POINTER(sexp_ser), 
-                                          (Py_ssize_t)LENGTH(sexp_ser));
+  res_string = PyUnicode_FromStringAndSize((void *)RAW_POINTER(sexp_ser), 
+					   (Py_ssize_t)LENGTH(sexp_ser));
   UNPROTECT(1);
   return res_string;
 }
@@ -1925,7 +1925,7 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
         Py_DECREF(tmp_obj);
         Py_XDECREF(citems);
         goto fail;
-      } else if (PyString_Check(argName)) {
+      } else if (PyUnicode_Check(argName)) {
         addArgName = 1;
       } else {
         PyErr_SetString(PyExc_TypeError, "All keywords must be strings.");
@@ -1959,7 +1959,7 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
       }
       SETCAR(c_R, tmp_R);
       if (addArgName) {
-        argNameString = PyString_AsString(argName);
+        argNameString = PyBytes_AsString(argName);
         SET_TAG(c_R, install(argNameString));
         /* printf("PyMem_Free..."); */
         /* FIXME: probably memory leak with argument names. */
@@ -2095,7 +2095,7 @@ Sexp_rcall(PyObject *self, PyObject *args)
     argName = PyTuple_GetItem(tmp_obj, 0);
     if (argName == Py_None) {
       addArgName = 0;
-    } else if (PyString_Check(argName)) {
+    } else if (PyUnicode_Check(argName)) {
       addArgName = 1;
     } else {
       PyErr_SetString(PyExc_TypeError, "All keywords must be strings (or None).");
@@ -2120,7 +2120,7 @@ Sexp_rcall(PyObject *self, PyObject *args)
     */
     SETCAR(c_R, tmp_R);
     if (addArgName) {
-      argNameString = PyString_AsString(argName);
+      argNameString = PyBytes_AsString(argName);
       SET_TAG(c_R, install(argNameString));
     }
     c_R = CDR(c_R);
@@ -2374,7 +2374,7 @@ VectorSexp_item(PyObject *object, Py_ssize_t i)
       break;
     case INTSXP:
       vi = INTEGER_POINTER(*sexp)[i_R];
-      res = PyInt_FromLong((long)vi);
+      res = PyLong_FromLong((long)vi);
       break;
     case LGLSXP:
       vi = LOGICAL_POINTER(*sexp)[i_R];
@@ -2386,7 +2386,7 @@ VectorSexp_item(PyObject *object, Py_ssize_t i)
       break;
     case STRSXP:
       vs = translateChar(STRING_ELT(*sexp, i_R));
-      res = PyString_FromString(vs);
+      res = PyUnicode_FromString(vs);
       break;
 /*     case CHARSXP: */
       /*       FIXME: implement handling of single char (if possible ?) */
@@ -2800,12 +2800,12 @@ EnvironmentSexp_subscript(PyObject *self, PyObject *key)
   char *name;
   SEXP res_R = NULL;
 
-  if (!PyString_Check(key)) {
-    PyErr_Format(PyExc_ValueError, "Keys must be string objects.");
+  if (!PyUnicode_Check(key)) {
+    PyErr_Format(PyExc_ValueError, "Keys must be unicode objects.");
     return NULL;
   }
 
-  name = PyString_AsString(key);
+  name = PyBytes_AsString(key);
 
   if (strlen(name) == 0) {
     PyErr_Format(PyExc_KeyError, name);
@@ -2841,8 +2841,8 @@ EnvironmentSexp_ass_subscript(PyObject *self, PyObject *key, PyObject *value)
 {
   char *name;
 
-  if (!PyString_Check(key)) {
-    PyErr_Format(PyExc_ValueError, "Keys must be string objects.");
+  if (!PyUnicode_Check(key)) {
+    PyErr_Format(PyExc_ValueError, "Keys must be unicode objects.");
     return -1;
   }
 
@@ -2854,7 +2854,7 @@ EnvironmentSexp_ass_subscript(PyObject *self, PyObject *key, PyObject *value)
     return -1;
   }
 
-  name = PyString_AsString(key);
+  name = PyBytes_AsString(key);
 
   if (embeddedR_status & RPY_R_BUSY) {
     PyErr_Format(PyExc_RuntimeError, "Concurrent access to R is not allowed.");
@@ -3276,7 +3276,7 @@ newSEXP(PyObject *object, int rType)
     PROTECT(sexp = NEW_INTEGER(length));
     for (i = 0; i < length; ++i) {
       if((item = PyNumber_Int(PySequence_Fast_GET_ITEM(seq_object, i)))) {
-        long l = PyInt_AS_LONG(item);
+        long l = PyLong_AS_LONG(item);
         INTEGER(sexp)[i] = (l<=INT_MAX && l>=INT_MIN)?l:NA_INTEGER;
         Py_DECREF(item);
       }
@@ -3304,7 +3304,7 @@ newSEXP(PyObject *object, int rType)
     PROTECT(sexp = NEW_CHARACTER(length));
     for (i = 0; i < length; ++i) {
       if((item = PyObject_Str(PySequence_Fast_GET_ITEM(seq_object, i)))) {
-        str_R = mkChar(PyString_AS_STRING(item));
+        str_R = mkChar(PyBytes_AS_STRING(item));
         if (!str_R) {
           Py_DECREF(item);
           PyErr_NoMemory();
@@ -3434,7 +3434,7 @@ EmbeddedR_sexpType(PyObject *self, PyObject *args)
     return NULL;
   }
   /* FIXME: store python strings when initializing validSexpType instead */
-  PyObject *res = PyString_FromString(sexp_type);
+  PyObject *res = PyUnicode_FromString(sexp_type);
   return res;
 
 }
@@ -3569,7 +3569,7 @@ do_Python(SEXP args)
     PyErr_Fetch(&exctype, &excvalue, &exctraceback);
     excstr = PyObject_Str(excvalue);
     if (excstr) {
-      error(PyString_AS_STRING(excstr));
+      error(PyBytes_AS_STRING(excstr));
       Py_DECREF(excstr);
     } 
     else {
@@ -3692,19 +3692,19 @@ initrinterface(void)
 
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 0, 
-                                PyString_FromString("rpy2"))
+                                PyUnicode_FromString("rpy2"))
                 );
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 1, 
-                                PyString_FromString("--quiet"))
+                                PyUnicode_FromString("--quiet"))
                 );
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 2,
-                                PyString_FromString("--vanilla"))
+                                PyUnicode_FromString("--vanilla"))
                 );
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 3, 
-                                PyString_FromString("--no-save"))
+                                PyUnicode_FromString("--no-save"))
                 );
 
   /* Add an extra ref. It should remain impossible to delete it */
