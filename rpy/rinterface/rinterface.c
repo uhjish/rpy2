@@ -1162,7 +1162,7 @@ EmbeddedR_exception_from_errmessage(void)
  * Access to R objects through Python objects
  */
 
-staticforward PyTypeObject Sexp_Type;
+static PyTypeObject Sexp_Type;
 
 void SexpObject_clear(SexpObject *sexpobj)
 {
@@ -1208,7 +1208,7 @@ static void
 Sexp_dealloc(PySexpObject *self)
 {
   Sexp_clear(self);
-  self->ob_type->tp_free((PyObject*)self);
+  ((PyObject *)self)->ob_type->tp_free((PyObject*)self);
 
   /* PyObject_Del(self); */
 }
@@ -1728,11 +1728,11 @@ Sexp_init(PyObject *self, PyObject *args, PyObject *kwds)
 /*
  * Generic Sexp_Type. It represents SEXP objects at large.
  */
+/* staticforward Sexp_Type declared earlier */
 static PyTypeObject Sexp_Type = {
         /* The ob_type field must be initialized in the module init function
          * to be portable to Windows without using C++. */
-        PyObject_HEAD_INIT(NULL)
-        0,                      /*ob_size*/
+        PyVarObject_HEAD_INIT(NULL, 0)
         "rpy2.rinterface.Sexp",      /*tp_name*/
         sizeof(PySexpObject),   /*tp_basicsize*/
         0,                      /*tp_itemsize*/
@@ -1741,7 +1741,7 @@ static PyTypeObject Sexp_Type = {
         0,                      /*tp_print*/
         0,                      /*tp_getattr*/
         0,                      /*tp_setattr*/
-        0,                      /*tp_compare*/
+	0,                      /*tp_reserved*/
         Sexp_repr,              /*tp_repr*/
         0,                      /*tp_as_number*/
         0,                      /*tp_as_sequence*/
@@ -1773,6 +1773,11 @@ static PyTypeObject Sexp_Type = {
         Sexp_new,               /*tp_new*/
         0,                      /*tp_free*/
         0,                      /*tp_is_gc*/
+        0,                      /*tp_bases*/
+        0,                      /*tp_mro*/
+        0,                      /*tp_cache*/
+        0,                      /*tp_subclasses*/
+        0,                      /*tp_weaklist*/
 };
 
 
