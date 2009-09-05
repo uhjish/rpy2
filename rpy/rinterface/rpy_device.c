@@ -703,7 +703,7 @@ GrDev_dealloc(PyGrDevObject *self)
 #endif
   R_ReleaseObject(self->devnum);
   PyMem_Free(((PyGrDevObject *)self)->grdev);
-  self->ob_type->tp_free((PyObject*)self);
+  ((PyObject *)self)->ob_type->tp_free((PyObject*)self);
 #ifdef RPY_DEBUG_GRDEV
   printf("  done.\n");
 #endif
