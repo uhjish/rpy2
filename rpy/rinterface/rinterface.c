@@ -2228,7 +2228,7 @@ static PyTypeObject ClosureSexp_Type = {
         "rpy2.rinterface.SexpClosure",       /*tp_name*/
         sizeof(PySexpObject),   /*tp_basicsize*/
         0,                      /*tp_itemsize*/
-        0, /* methods */
+        /* methods */
         0, /*tp_dealloc*/
         0,                      /*tp_print*/
         0,                      /*tp_getattr*/
@@ -3277,7 +3277,7 @@ newSEXP(PyObject *object, int rType)
   case INTSXP:
     PROTECT(sexp = NEW_INTEGER(length));
     for (i = 0; i < length; ++i) {
-      if((item = PyNumber_Int(PySequence_Fast_GET_ITEM(seq_object, i)))) {
+      if((item = PyNumber_Long(PySequence_Fast_GET_ITEM(seq_object, i)))) {
         long l = PyLong_AS_LONG(item);
         INTEGER(sexp)[i] = (l<=INT_MAX && l>=INT_MIN)?l:NA_INTEGER;
         Py_DECREF(item);
