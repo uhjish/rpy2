@@ -3619,8 +3619,17 @@ static char **validSexpType;
 #define PyMODINIT_FUNC void
 #endif
 
+
+static struct PyModuleDef rinterfacemodule = {
+  PyModuleDef_HEAD_INIT,
+  "rinterface",
+  module_doc,
+  -1,
+  EmbeddedR_methods 
+};
+
 PyMODINIT_FUNC
-initrinterface(void)
+PyInit_rinterface(void)
 {
   /* PyMODINIT_FUNC */
   /* RPY_RINTERFACE_INIT(void) */
@@ -3643,7 +3652,7 @@ initrinterface(void)
     return NULL;
 
   PyObject *m, *d;
-  m = Py_InitModule3("rinterface", EmbeddedR_methods, module_doc);
+  m = PyModule_Create(&rinterfacemodule);
   if (m == NULL)
     return NULL;
   d = PyModule_GetDict(m);
