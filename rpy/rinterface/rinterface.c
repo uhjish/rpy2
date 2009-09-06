@@ -2224,12 +2224,11 @@ ClosureSexp_init(PyObject *self, PyObject *args, PyObject *kwds);
 static PyTypeObject ClosureSexp_Type = {
         /* The ob_type field must be initialized in the module init function
          * to be portable to Windows without using C++. */
-        PyObject_HEAD_INIT(NULL)
-        0,                      /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0)
         "rpy2.rinterface.SexpClosure",       /*tp_name*/
         sizeof(PySexpObject),   /*tp_basicsize*/
         0,                      /*tp_itemsize*/
-        /* methods */
+        0, /* methods */
         0, /*tp_dealloc*/
         0,                      /*tp_print*/
         0,                      /*tp_getattr*/
@@ -2550,8 +2549,7 @@ VectorSexp_init(PyObject *self, PyObject *args, PyObject *kwds);
 static PyTypeObject VectorSexp_Type = {
         /* The ob_type field must be initialized in the module init function
          * to be portable to Windows without using C++. */
-        PyObject_HEAD_INIT(NULL)
-        0,                      /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0)
         "rpy2.rinterface.SexpVector",        /*tp_name*/
         sizeof(PySexpObject),   /*tp_basicsize*/
         0,                      /*tp_itemsize*/
@@ -2970,8 +2968,7 @@ EnvironmentSexp_init(PyObject *self, PyObject *args, PyObject *kwds);
 static PyTypeObject EnvironmentSexp_Type = {
         /* The ob_type field must be initialized in the module init function
          * to be portable to Windows without using C++. */
-        PyObject_HEAD_INIT(NULL)
-        0,                      /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0)
         "rpy2.rinterface.SexpEnvironment",   /*tp_name*/
         sizeof(PySexpObject),   /*tp_basicsize*/
         0,                      /*tp_itemsize*/
@@ -3063,8 +3060,7 @@ Attributes can be accessed using the method 'do_slot'.\
 static PyTypeObject S4Sexp_Type = {
         /* The ob_type field must be initialized in the module init function
          * to be portable to Windows without using C++. */
-        PyObject_HEAD_INIT(NULL)
-        0,                      /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0)
         "rpy2.rinterface.SexpS4",    /*tp_name*/
         sizeof(PySexpObject),   /*tp_basicsize*/
         0,                      /*tp_itemsize*/
@@ -3116,8 +3112,7 @@ PyDoc_STRVAR(LangSexp_Type_doc,
 static PyTypeObject LangSexp_Type = {
         /* The ob_type field must be initialized in the module init function
          * to be portable to Windows without using C++. */
-        PyObject_HEAD_INIT(NULL)
-        0,                      /*ob_size*/
+  PyVarObject_HEAD_INIT(NULL, 0)
         "rpy2.rinterface.SexpLang",  /*tp_name*/
         sizeof(PySexpObject),   /*tp_basicsize*/
         0,                      /*tp_itemsize*/
