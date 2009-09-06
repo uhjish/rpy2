@@ -52,7 +52,7 @@ class NumpyConversionsTestCase(unittest.TestCase):
 
     def testVectorUnicodeCharacter(self):
         self.assertTrue(False) # arrays of unicode characters causing segfault
-        u = numpy.array([u"a", u"b", u"c"], dtype="U")
+        u = numpy.array(["a", "b", "c"], dtype="U")
         self.checkHomogeneous(u, "character", "character")
 
     def testArray(self):
