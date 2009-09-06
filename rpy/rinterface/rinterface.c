@@ -3316,7 +3316,7 @@ newSEXP(PyObject *object, int rType)
         Py_DECREF(item);
         SET_STRING_ELT(sexp, i, str_R);
       }
-      else if ((item = PyObject_Unicode(PySequence_Fast_GET_ITEM(seq_object, i)))) {
+      else if ((item = PyObject_Str(PySequence_Fast_GET_ITEM(seq_object, i)))) {
         str_R = mkChar(PyUnicode_AS_DATA(item));
         if (!str_R) {
           Py_DECREF(item);
