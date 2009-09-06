@@ -105,7 +105,7 @@ class SexpVectorTestCase(unittest.TestCase):
         self.assertTrue(ok)
 
     def testNewUnicode(self):
-        sexp = ri.SexpVector([u'abc', ], ri.STRSXP)
+        sexp = ri.SexpVector(['abc', ], ri.STRSXP)
         isCharacter = ri.globalenv.get("is.character")
         ok = isCharacter(sexp)[0]
         self.assertTrue(ok)
@@ -114,11 +114,11 @@ class SexpVectorTestCase(unittest.TestCase):
 
     def testNewVector(self):
         sexp_char = ri.SexpVector(["abc", ], 
-                                          ri.STRSXP)
+                                  ri.STRSXP)
         sexp_int = ri.SexpVector([1, ], 
-                                         ri.INTSXP)
+                                 ri.INTSXP)
         sexp = ri.SexpVector([sexp_char, sexp_int], 
-                                     ri.VECSXP)
+                             ri.VECSXP)
         isList = ri.globalenv.get("is.list")
         ok = isList(sexp)[0]
         self.assertTrue(ok)
