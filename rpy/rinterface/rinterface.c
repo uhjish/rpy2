@@ -953,6 +953,9 @@ static PyObject* EmbeddedR_init(PyObject *self)
   for (ii = 0; ii < n_args; ii++) {
     opt_string = PyTuple_GetItem(initOptions, ii);
     options[ii] = PyBytes_AsString(opt_string);
+    if (options[ii] == NULL) {
+      return NULL;
+    }
   }
 
 
@@ -1010,7 +1013,7 @@ static PyObject* EmbeddedR_init(PyObject *self)
 
 #ifdef RIF_HAS_RSIGHAND
   R_SignalHandlers = 0;
-#endif  
+#endif
   /* int status = Rf_initEmbeddedR(n_args, options);*/
   status = Rf_initialize_R(n_args, options);
   if (status < 0) {
@@ -3800,5 +3803,7 @@ PyInit_rinterface(void)
 
 
   rinterface_unserialize = PyDict_GetItemString(d, "unserialize");
+
+  return m;
   
 }
