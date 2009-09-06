@@ -3630,29 +3630,29 @@ initrinterface(void)
          * object; doing it here is required for portability to Windows 
          * without requiring C++. */
   if (PyType_Ready(&Sexp_Type) < 0)
-    return;
+    return NULL;
   if (PyType_Ready(&ClosureSexp_Type) < 0)
-    return;
+    return NULL;
   if (PyType_Ready(&VectorSexp_Type) < 0)
-    return;
+    return NULL;
   if (PyType_Ready(&EnvironmentSexp_Type) < 0)
-    return;
+    return NULL;
   if (PyType_Ready(&S4Sexp_Type) < 0)
-    return;
+    return NULL;
   if (PyType_Ready(&LangSexp_Type) < 0)
-    return;
+    return NULL;
 
   PyObject *m, *d;
   m = Py_InitModule3("rinterface", EmbeddedR_methods, module_doc);
   if (m == NULL)
-    return;
+    return NULL;
   d = PyModule_GetDict(m);
 
   /* Add SXP types */
   validSexpType = calloc(RPY_MAX_VALIDSEXTYPE, sizeof(char *));
   if (! validSexpType) {
     PyErr_NoMemory();
-    return;
+    return NULL;
   }
 
   ADD_SEXP_CONSTANT(m, NILSXP);
@@ -3725,7 +3725,7 @@ initrinterface(void)
     RPyExc_RuntimeError = PyErr_NewException("rpy2.rinterface.RRuntimeError", 
                                              NULL, NULL);
     if (RPyExc_RuntimeError == NULL)
-      return;
+      return NULL;
   }
   
   Py_INCREF(RPyExc_RuntimeError);
@@ -3735,7 +3735,7 @@ initrinterface(void)
   Py_INCREF(Py_False);
 
   if (PyModule_AddObject(m, "isInitialized", embeddedR_isInitialized) < 0)
-    return;
+    return NULL;
 
   globalEnv = (PySexpObject *)Sexp_new(&EnvironmentSexp_Type, 
                                        Py_None, Py_None);
@@ -3744,7 +3744,7 @@ initrinterface(void)
   if (PyDict_SetItemString(d, "globalenv", (PyObject *)globalEnv) < 0)
   {
     Py_DECREF(globalEnv);
-    return;
+    return NULL;
   }
   Py_DECREF(globalEnv);
 
@@ -3755,7 +3755,7 @@ initrinterface(void)
                            (PyObject *)baseNameSpaceEnv) < 0)
   {
     Py_DECREF(baseNameSpaceEnv);
-    return;
+    return NULL;
   }
   Py_DECREF(baseNameSpaceEnv);
 
@@ -3766,7 +3766,7 @@ initrinterface(void)
                            (PyObject *)emptyEnv) < 0)
   {
     Py_DECREF(emptyEnv);
-    return;
+    return NULL;
   }
   Py_DECREF(emptyEnv);
 
@@ -3775,7 +3775,7 @@ initrinterface(void)
   if (PyDict_SetItemString(d, "R_MissingArg", (PyObject *)rpy_R_MissingArg) < 0)
   {
     Py_DECREF(rpy_R_MissingArg);
-    return;
+    return NULL;
   }
   Py_DECREF(rpy_R_MissingArg);  
 
@@ -3784,7 +3784,7 @@ initrinterface(void)
   if (PyDict_SetItemString(d, "R_NilValue", (PyObject *)rpy_R_NilValue) < 0)
   {
     Py_DECREF(rpy_R_NilValue);
-    return;
+    return NULL;
   }
   Py_DECREF(rpy_R_NilValue);  
 
