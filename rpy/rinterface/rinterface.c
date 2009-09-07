@@ -3706,19 +3706,19 @@ PyInit_rinterface(void)
 
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 0, 
-                                PyUnicode_FromString("rpy2"))
+                                PyBytes_FromString("rpy2"))
                 );
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 1, 
-                                PyUnicode_FromString("--quiet"))
+                                PyBytes_FromString("--quiet"))
                 );
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 2,
-                                PyUnicode_FromString("--vanilla"))
+                                PyBytes_FromString("--vanilla"))
                 );
   PYASSERT_ZERO(
                 PyTuple_SetItem(initOptions, 3, 
-                                PyUnicode_FromString("--no-save"))
+                                PyBytes_FromString("--no-save"))
                 );
 
   /* Add an extra ref. It should remain impossible to delete it */
