@@ -1,6 +1,6 @@
 from rpy2.robjects.robject import RObjectMixin
 import rpy2.rinterface as rinterface
-import conversion
+import rpy2.robjects.conversion
 
 getmethod = rinterface.baseenv.get("getMethod")
 

@@ -211,7 +211,7 @@ static double rpy_StrWidth(const char *str, const pGEcontext gc, pDevDesc dd)
 
   /* FIXME give the callback access to gc */
   PyObject *self = (PyObject *)dd->deviceSpecific;
-  PyObject *py_str = PyString_FromString(str);
+  PyObject *py_str = PyUnicode_FromString(str);
   result = PyObject_CallMethodObjArgs(self, GrDev_strwidth_name, py_str);
 
   rpy_printandclear_error();
@@ -245,7 +245,7 @@ static void rpy_Text(double x, double y, const char *str,
   /* FIXME optimize ? */
   PyObject *py_x = PyFloat_FromDouble(x);
   PyObject *py_y = PyFloat_FromDouble(y);
-  PyObject *py_str = PyString_FromString(str);
+  PyObject *py_str = PyUnicode_FromString(str);
   PyObject *py_rot = PyFloat_FromDouble(rot);
   PyObject *py_hadj = PyFloat_FromDouble(hadj);
   /* FIXME pass gc ? */
@@ -503,7 +503,7 @@ static void rpy_Mode(int mode, pDevDesc dd)
   /* PyOS_setsig(SIGINT, python_sighandler); */
 
   PyObject *self = (PyObject *)dd->deviceSpecific;
-  PyObject *py_mode = PyInt_FromLong((long)mode);
+  PyObject *py_mode = PyLong_FromLong((long)mode);
   result = PyObject_CallMethodObjArgs(self, GrDev_mode_name, 
                                       py_mode,
                                       NULL);
@@ -536,7 +536,7 @@ static void rpy_MetricInfo(int c, const pGEcontext gc,
 #ifdef RPY_DEBUG_GRDEV
   printf("FIXME: MetricInfo.\n");
 #endif
-  PyObject *py_c = PyInt_FromLong((long)c);
+  PyObject *py_c = PyLong_FromLong((long)c);
   PyObject *py_ascent = PyFloat_FromDouble(*ascent);
   PyObject *py_descent = PyFloat_FromDouble(*descent);
   PyObject *py_width = PyFloat_FromDouble(*width);
@@ -589,7 +589,7 @@ static SEXP rpy_GetEvent(SEXP rho, const char *prompt)
 #ifdef RPY_DEBUG_GRDEV
   printf("FIXME: MetricInfo.\n");
 #endif
-  PyObject *py_prompt = PyString_FromString(prompt);
+  PyObject *py_prompt = PyUnicode_FromString(prompt);
   /* FIXME pass gc ? */
   result = PyObject_CallMethodObjArgs(self, GrDev_getevent_name,
                                       py_prompt,
@@ -713,7 +713,7 @@ static PyObject*
 GrDev_repr(PyObject *self)
 {
   pDevDesc devdesc = ((PyGrDevObject *)self)->grdev;
-  return PyString_FromFormat("<%s - Python:\%p / R graphical device:\%p>",
+  return PyUnicode_FromFormat("<%s - Python:\%p / R graphical device:\%p>",
                              self->ob_type->tp_name,
                              self,
                              devdesc);
@@ -1150,7 +1150,7 @@ static PyObject* GrDev_devnum_get(PyObject* self)
     Py_INCREF(Py_None);
     res = Py_None;
   } else {
-    res = PyInt_FromLong((long)RPY_DEV_NUM(self));
+    res = PyLong_FromLong((long)RPY_DEV_NUM(self));
   }
   return res;
 
@@ -1326,23 +1326,23 @@ PyMODINIT_FUNC
 initrpy_device(void)
 {
 
-  GrDev_close_name = PyString_FromString("close");
-  GrDev_activate_name = PyString_FromString("activate");
-  GrDev_deactivate_name = PyString_FromString("deactivate");
-  GrDev_size_name = PyString_FromString("size");
-  GrDev_newpage_name = PyString_FromString("newpage");
-  GrDev_clip_name = PyString_FromString("clip");
-  GrDev_strwidth_name = PyString_FromString("strwidth");
-  GrDev_text_name = PyString_FromString("text");
-  GrDev_rect_name = PyString_FromString("rect");
-  GrDev_circle_name = PyString_FromString("circle");
-  GrDev_line_name = PyString_FromString("line");
-  GrDev_polyline_name = PyString_FromString("polyline");
-  GrDev_polygon_name = PyString_FromString("polygon");
-  GrDev_locator_name = PyString_FromString("locator");
-  GrDev_mode_name = PyString_FromString("mode");
-  GrDev_metricinfo_name = PyString_FromString("metricinfo");
-  GrDev_getevent_name = PyString_FromString("getevent");
+  GrDev_close_name = PyUnicode_FromString("close");
+  GrDev_activate_name = PyUnicode_FromString("activate");
+  GrDev_deactivate_name = PyUnicode_FromString("deactivate");
+  GrDev_size_name = PyUnicode_FromString("size");
+  GrDev_newpage_name = PyUnicode_FromString("newpage");
+  GrDev_clip_name = PyUnicode_FromString("clip");
+  GrDev_strwidth_name = PyUnicode_FromString("strwidth");
+  GrDev_text_name = PyUnicode_FromString("text");
+  GrDev_rect_name = PyUnicode_FromString("rect");
+  GrDev_circle_name = PyUnicode_FromString("circle");
+  GrDev_line_name = PyUnicode_FromString("line");
+  GrDev_polyline_name = PyUnicode_FromString("polyline");
+  GrDev_polygon_name = PyUnicode_FromString("polygon");
+  GrDev_locator_name = PyUnicode_FromString("locator");
+  GrDev_mode_name = PyUnicode_FromString("mode");
+  GrDev_metricinfo_name = PyUnicode_FromString("metricinfo");
+  GrDev_getevent_name = PyUnicode_FromString("getevent");
 
   if (PyType_Ready(&GrDev_Type) < 0)
     return;

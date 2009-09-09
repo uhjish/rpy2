@@ -4,7 +4,8 @@ import rpy2.rinterface
 
 rpy2.rinterface.initr()
 
-import conversion
+import rpy2.robjects.conversion
+
 
 class RObjectMixin(object):
     """ Class to provide methods common to all RObject instances """

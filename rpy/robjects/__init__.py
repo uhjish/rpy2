@@ -12,7 +12,7 @@ import itertools
 import rpy2.rinterface as rinterface
 import rpy2.rlike.container as rlc
 
-import conversion
+import rpy2.robjects.conversion
 
 from rpy2.robjects.robject import RObjectMixin, RObject
 from rpy2.robjects.methods import RS4
