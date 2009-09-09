@@ -2808,8 +2808,8 @@ EnvironmentSexp_subscript(PyObject *self, PyObject *key)
   char *name;
   SEXP res_R = NULL;
 
-  if (!PyUnicode_Check(key)) {
-    PyErr_Format(PyExc_ValueError, "Keys must be unicode objects.");
+  if (!PyBytes_Check(key)) {
+    PyErr_Format(PyExc_ValueError, "Keys must be bytes objects.");
     return NULL;
   }
 
@@ -2849,8 +2849,8 @@ EnvironmentSexp_ass_subscript(PyObject *self, PyObject *key, PyObject *value)
 {
   char *name;
 
-  if (!PyUnicode_Check(key)) {
-    PyErr_Format(PyExc_ValueError, "Keys must be unicode objects.");
+  if (!PyBytes_Check(key)) {
+    PyErr_Format(PyExc_ValueError, "Keys must be bytes objects.");
     return -1;
   }
 
