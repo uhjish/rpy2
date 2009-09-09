@@ -1322,8 +1322,17 @@ static PyMethodDef rpydevice_methods[] = {
 #define PyMODINIT_FUNC void
 #endif
 
+static struct PyModuleDef rpy_devicemodule = {
+  PyModuleDef_HEAD_INIT,
+  "rpy_device",
+  module_doc,
+  -1,
+  rpydevice_methods 
+};
+
+
 PyMODINIT_FUNC
-initrpy_device(void)
+PyInit_rpy_device(void)
 {
 
   GrDev_close_name = PyUnicode_FromString("close");
@@ -1345,13 +1354,15 @@ initrpy_device(void)
   GrDev_getevent_name = PyUnicode_FromString("getevent");
 
   if (PyType_Ready(&GrDev_Type) < 0)
-    return;
+    return NULL;
   
   PyObject *m, *d;
-  m = Py_InitModule3("rpy_device", rpydevice_methods, module_doc);
+  m = PyModule_Create(&rpy_devicemodule);
   if (m == NULL)
-    return;
+    return NULL;
   d = PyModule_GetDict(m);
 
   PyModule_AddObject(m, "GraphicalDevice", (PyObject *)&GrDev_Type);  
+
+  return m;
 }
