@@ -176,7 +176,7 @@ static int preserved_robjects = 0;
 
 /* early definition of functions */
 static PySexpObject* newPySexpObject(const SEXP sexp);
-static SEXP newSEXP(PyObject *object, const int rType);
+static SEXP newSEXP(PyObject *object, const int rType, const cetype_t str_encoding);
 
 
 /* --- set output from the R console ---*/
@@ -2395,7 +2395,7 @@ VectorSexp_item(PyObject *object, Py_ssize_t i)
       break;
     case STRSXP:
       vs = translateChar(STRING_ELT(*sexp, i_R));
-      res = PyUnicode_FromString(vs);
+      res = PyBytes_FromString(vs);
       break;
 /*     case CHARSXP: */
       /*       FIXME: implement handling of single char (if possible ?) */
@@ -2611,15 +2611,18 @@ VectorSexp_init(PyObject *self, PyObject *args, PyObject *kwds)
 
   PyObject *object;
   int sexptype = -1;
+  int str_encoding = CE_NATIVE;
+  cetype_t cevalue;
   PyObject *copy = Py_False;
-  static char *kwlist[] = {"sexpvector", "sexptype", "copy", NULL};
+  static char *kwlist[] = {"sexpvector", "sexptype", "encoding", "copy", NULL};
 
 
   /* FIXME: handle the copy argument */
-  if (! PyArg_ParseTupleAndKeywords(args, kwds, "O|iO!", 
+  if (! PyArg_ParseTupleAndKeywords(args, kwds, "O|iiO!", 
                                     kwlist,
                                     &object,
                                     &sexptype,
+				    &str_encoding,
                                     &PyBool_Type, &copy)) {
     return -1;
   }
@@ -2649,7 +2652,20 @@ VectorSexp_init(PyObject *self, PyObject *args, PyObject *kwds)
      *(RPy has something)... or leave it to extensions ? 
      */
 
-    SEXP sexp = newSEXP(object, sexptype);
+    switch (str_encoding) {
+      case CE_NATIVE:
+      case CE_UTF8:
+      case CE_LATIN1:
+      case CE_SYMBOL:
+      case CE_ANY:
+	cevalue = str_encoding;
+	break;
+      default:
+	PyErr_Format(PyExc_ValueError, "Invalid encoding.");
+	return -1;
+	break;
+      }
+    SEXP sexp = newSEXP(object, sexptype, cevalue);
     if (sexp == NULL) {
       /* newSEXP returning NULL will also have raised an exception
        * (not-so-clear design :/ )
@@ -3243,11 +3259,13 @@ newPySexpObject(const SEXP sexp)
    for an R vector-like 'rType', and from an 'object'
    that is a sequence. */
 static SEXP
-newSEXP(PyObject *object, int rType)
+newSEXP(PyObject *object, int rType, cetype_t str_encoding)
 {
   SEXP sexp;
   SEXP str_R; /* used whenever there a string / unicode */
-  PyObject *seq_object, *item; 
+  char *str_buffer;
+  Py_ssize_t str_size;
+  PyObject *seq_object, *item, *item_tmp; 
 
 #ifdef RPY_VERBOSE
   printf("  new SEXP for Python:%p.\n", object);
@@ -3308,31 +3326,42 @@ newSEXP(PyObject *object, int rType)
   case STRSXP:
     PROTECT(sexp = NEW_CHARACTER(length));
     for (i = 0; i < length; ++i) {
-      if((item = PyObject_Str(PySequence_Fast_GET_ITEM(seq_object, i)))) {
-        str_R = mkChar(PyBytes_AS_STRING(item));
-        if (!str_R) {
-          Py_DECREF(item);
-          PyErr_NoMemory();
-          sexp = NULL;
-          break;
-        }
-        Py_DECREF(item);
-        SET_STRING_ELT(sexp, i, str_R);
+      item = PySequence_Fast_GET_ITEM(seq_object, i);
+      /* If unicode, try to decode it */
+      if (PyUnicode_Check(item)) {
+	switch (str_encoding) {
+	case CE_UTF8:
+	  item_tmp = PyUnicode_AsUTF8String(item);
+	  break;
+	case CE_LATIN1:
+	  item_tmp = PyUnicode_AsLatin1String(item);
+	  break;
+	default:
+	  item_tmp = NULL;
+	  PyErr_Format(PyExc_ValueError, "Codecs can only be UTF8 or LATIN1");
+	  break;
+	}
+	Py_DECREF(item);
+	item = item_tmp;
       }
-      else if ((item = PyObject_Str(PySequence_Fast_GET_ITEM(seq_object, i)))) {
-        str_R = mkChar(PyUnicode_AS_DATA(item));
-        if (!str_R) {
-          Py_DECREF(item);
-          PyErr_NoMemory();
-          sexp = NULL;
-          break;
-        }
-        Py_DECREF(item);
-        SET_STRING_ELT(sexp, i, str_R);
-      }
-      else {
-        PyErr_Clear();
-        SET_STRING_ELT(sexp, i, NA_STRING);
+      if (PyBytes_AsStringAndSize(item, &str_buffer, &str_size) != 1) {
+	/*FIXME: catch str_size > max_int*/
+	  str_R = mkCharLenCE(str_buffer, (int)str_size, str_encoding);
+	  if (!str_R) {
+	    Py_DECREF(item);
+	    PyErr_NoMemory();
+	    sexp = NULL;
+	    UNPROTECT(1);
+	    break;
+	  }
+	  Py_DECREF(item);
+	  SET_STRING_ELT(sexp, i, str_R);
+      } else {
+	/* PyErr_Format(PyExc_ValueError, 
+	   "All elements of the list must be bytes strings"); */
+	Py_DECREF(item);
+	UNPROTECT(1);
+	return NULL;
       }
     }
     UNPROTECT(1);
@@ -3346,6 +3375,7 @@ newSEXP(PyObject *object, int rType)
           Py_DECREF(item);
           PyErr_Format(PyExc_ValueError, "All elements of the list must be of "
                        "type 'Sexp_Type'.");
+	  UNPROTECT(1);
           return NULL;
         }
         SET_ELEMENT(sexp, i, RPY_SEXP((PySexpObject *)item));
@@ -3697,6 +3727,13 @@ PyInit_rinterface(void)
   /* "Logical" (boolean) values */
   ADD_INT_CONSTANT(m, TRUE);
   ADD_INT_CONSTANT(m, FALSE);
+
+  /* Character encodings */
+  ADD_INT_CONSTANT(m, CE_NATIVE);
+  ADD_INT_CONSTANT(m, CE_UTF8);
+  ADD_INT_CONSTANT(m, CE_LATIN1);
+  ADD_INT_CONSTANT(m, CE_SYMBOL);
+  ADD_INT_CONSTANT(m, CE_ANY);
 
   /* R_ext/Arith.h */
   /* ADD_INT_CONSTANT(m, NA_LOGICAL); */
