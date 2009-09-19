@@ -3357,8 +3357,7 @@ newSEXP(PyObject *object, int rType, cetype_t str_encoding)
 	  Py_DECREF(item);
 	  SET_STRING_ELT(sexp, i, str_R);
       } else {
-	/* PyErr_Format(PyExc_ValueError, 
-	   "All elements of the list must be bytes strings"); */
+	/* at this point, only bytes are handled */
 	Py_DECREF(item);
 	UNPROTECT(1);
 	return NULL;
