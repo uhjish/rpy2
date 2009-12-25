@@ -80,14 +80,13 @@ class MappingTestCase(unittest.TestCase):
         self.assertEquals(rinterface.LGLSXP, rob.typeof)
 
     def testMapperPy2R_str(self):        
-        py = 'houba'
+        py = b'houba'
         rob = robjects.default_py2ro(py)
         self.assertTrue(isinstance(rob, robjects.Vector))
         self.assertEquals(rinterface.STRSXP, rob.typeof)
 
     def testMapperPy2R_unicode(self):        
         py = 'houba'
-        self.assertTrue(False) # what with unicode ?
         self.assertTrue(isinstance(py, unicode))
         rob = robjects.default_py2ro(py)
         self.assertTrue(isinstance(rob, robjects.Vector))

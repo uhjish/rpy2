@@ -21,14 +21,8 @@ class WrapperSexpVectorTestCase(unittest.TestCase):
         ok = isNumeric(sexp)[0]
         self.assertTrue(ok)
 
-    def testStrUTF8(self):
-        sexp = ri.StrSexpVector(["a", "b", "c"], ri.CE_UTF8)
-        isStr = ri.globalenv.get("is.character")
-        ok = isStr(sexp)[0]
-        self.assertTrue(ok)
-
-    def testStrLatin1(self):
-        sexp = ri.StrSexpVector(["a", "b", "c"], ri.CE_LATIN1)
+    def testStr(self):
+        sexp = ri.StrSexpVector(["a", ])
         isStr = ri.globalenv.get("is.character")
         ok = isStr(sexp)[0]
         self.assertTrue(ok)
@@ -120,11 +114,11 @@ class SexpVectorTestCase(unittest.TestCase):
 
     def testNewVector(self):
         sexp_char = ri.SexpVector(["abc", ], 
-                                  ri.STRSXP)
+                                          ri.STRSXP)
         sexp_int = ri.SexpVector([1, ], 
-                                 ri.INTSXP)
+                                         ri.INTSXP)
         sexp = ri.SexpVector([sexp_char, sexp_int], 
-                             ri.VECSXP)
+                                     ri.VECSXP)
         isList = ri.globalenv.get("is.list")
         ok = isList(sexp)[0]
         self.assertTrue(ok)

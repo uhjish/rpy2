@@ -151,11 +151,13 @@ def py2rpy(obj):
 
 def rpy2py_basic(obj):    
     if hasattr(obj, '__len__'):
-        if obj.typeof in [ri.INTSXP, ri.REALSXP, ri.CPLXSXP, 
-                            ri.STRSXP]:
+        if obj.typeof in [ri.INTSXP, ri.REALSXP, ri.CPLXSXP,
+                          ri.LGLSXP,ri.STRSXP]:
             res = [x for x in obj]
         elif obj.typeof in [ri.VECSXP]:
             res = [rpy2py(x) for x in obj]
+        elif obj.typeof == [ri.LANGSXP]:
+            res = Robj(obj)
         else:
             raise ValueError("Invalid type for 'obj'.")
     else:
@@ -188,7 +190,7 @@ class Robj(object):
     def __init__(self, sexp):
 
         if not isinstance(sexp, ri.Sexp):
-            raise ValueError('"sexp" must inherit from ri.Sexp')
+            raise ValueError('"sexp" must inherit from rinterface.Sexp (not %s)' %str(type(sexp)))
         self.__sexp = sexp
 
     def __call__(self, *args, **kwargs):
@@ -235,8 +237,10 @@ class Robj(object):
     #    res = rpy2py(self)
     #    return res
 
-    def as_py(mode = default_mode):
-        res = rpy2py(self, mode)
+    def as_py(self, mode = None):
+        if mode is None:
+            mode = default_mode
+        res = rpy2py(self.__sexp, mode = mode)
         return res
 
     def __local_mode(self, mode = default_mode):

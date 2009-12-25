@@ -5,13 +5,13 @@ from distutils.command.build import build as _build
 
 try:
     from setuptools import setup
-except ImportError as ie:
+except ImportError:
     from distutils.core import setup
 from distutils.core import Extension
 
 
 pack_name = 'rpy2'
-pack_version = __import__('rpy').__version__[0]
+pack_version = __import__('rpy').__version__
 
 
 class build(_build):

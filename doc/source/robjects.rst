@@ -322,7 +322,7 @@ Extracting, R-style
 ^^^^^^^^^^^^^^^^^^^
 
 Access to R-style extracting/subsetting is granted though the two
-delegators *rx* and *rx2*, representing the R function *[* and *[[*
+delegators *rx* and *rx2*, representing the R functions *[* and *[[*
 respectively.
 
 In short, R-style extracting has the following characteristics:
@@ -365,6 +365,8 @@ The two next examples demonstrate some of `R`'s features
 >>> print(x.rx('a'))
 a
 1
+
+
 
 .. _robjects-missingvalues:
 
@@ -603,16 +605,22 @@ Creating an :class:`DataFrame` can be done by:
 The constructor for :class:`DataFrame` accepts either a 
 :class:`rinterface.SexpVector` 
 (with :attr:`typeof` equal to *VECSXP*, that is an R `list`)
-or an instance of class :class:`rpy2.rlike.container.TaggedList`.
+or any Python object implementing the method :meth:`iteritems`
+(for example :class:`dict`, or :class:`rpy2.rlike.container.OrdDict`)
 
->>> robjects.DataFrame()
+Empty `data.frame`:
 
+>>> dataf = robjects.DataFrame()
 
-Creating the data.frame in R can be achieved in numerous ways,
-as many R functions do return a data.frame.
-In this example, will use the R function `data.frame()`, that
-constructs a data.frame from named arguments
+`data.frame` with 2 two columns (not that the order of
+the columns in the resulting :class:`DataFrame` can be different
+from the order in which they are declared):
 
+>>> d = {'a': robjects.IntVector((1,2,3)), 'b': robjects.IntVector((4,5,6))}
+>>> dataf = robject.DataFrame(d)
+
+To create a :class:`DataFrame` and be certain of the order in which the
+columns are an ordered dictionary can be used:
 
 >>> import rpy2.rlike.container as rlc
 >>> od = rlc.OrdDict(c(('value', robjects.IntVector((1,2,3))),
@@ -621,11 +629,9 @@ constructs a data.frame from named arguments
 >>> print(dataf.colnames)
 [1] "letter" "value"
 
-.. note::
-   The order of the columns `value` and `letter` cannot be conserved,
-   since we are using a Python dictionnary. This difference between
-   R and Python can be resolved by using TaggedList instances
-   (XXX add material about that).
+Creating the data.frame in R can otherwise be achieved in numerous ways,
+as many R functions do return a `data.frame`, such as the
+ function `data.frame()`.
 
 Extracting elements
 ^^^^^^^^^^^^^^^^^^^
@@ -770,8 +776,9 @@ Python function:
 >>> plot(rnorm(100), ylab="random")
 
 This is all looking fine and simple until R parameters with names 
-such as `na.rm` are encountered. In those cases, using the special
-syntax `**kwargs` is one way to go.
+such as `na.rm` are encountered. By default, this is addressed by
+having a translation of '.' in the R parameter name into a '_' in the Python
+parameter name.
 
 Let's take an example in R:
 
@@ -785,8 +792,21 @@ In Python it can then write:
 
    from rpy2 import robjects
 
-   myparams = {'na.rm': True}
-   robjects.r.sum(0, **myparams)
+   robjects.r.sum(0, na_rm = True)
+
+.. note::
+
+   The object robjects.r.sum is an instance of :class:`SignatureTranslatedFunction`,
+   a child class of :class:`Function`, and the translation of the parameter within
+   its constructor. This saves on having to translate parameters at each function
+   call, and allow to perform sanity check regarding possible ambiguous translation.
+
+   If translation is not desired, the class :class:`Function` can be used. With
+   that class, using the special Python syntax `**kwargs` is one way to go specify
+   named parameters with a dot '.'
+
+
+
 
 Things are also not always that simple, as the use of a dictionary does
 not ensure that the order in which the parameters are passed is conserved.
@@ -811,6 +831,9 @@ on the behavior of function can be found in Section :ref:`rinterface-functions`.
    :show-inheritance:
    :members:
 
+.. autoclass:: rpy2.robjects.SignatureTranslatedFunction(*args, **kwargs)
+   :show-inheritance:
+   :members:
 
 .. index::
    pair: robjects; Formula
@@ -894,7 +917,7 @@ its :attr:`__dict__` contains keys corresponding to the R symbols.
 For example the R function *data()* can be accessed like:
 
 >>> utils.data
-<Function - Python:0x913754c / R:0x943bdf8>
+<SignatureTranslatedFunction - Python:0x913754c / R:0x943bdf8>
 
 Unfortunately, accessing an R symbol can be a little less straightforward
 as R symbols can contain characters that are invalid in Python symbols.
@@ -912,7 +935,7 @@ differences:
 - A check that the translation is not masking other R symbols in the package
   is performed (e.g., both 'print_me' and 'print.me' are present).
   Should it happen, a :class:`rpy2.robjects.packages.LibraryError` is raised,
-  an the optional parameter *translation* to :func:`importr`
+  the optional parameter *robject_translations* to :func:`importr`
   shoud be used.
 
 - The translation is concerning one package, limiting the risk
@@ -929,6 +952,19 @@ differences:
 
    >>> utils.__dict__['?']
    <Function - Python:0x913796c / R:0x9366fac>
+
+In addition to the translation of robjects symbols,
+objects that are R functions see their named arguments translated as similar way
+(with '.' becoming '_' in Python).
+
+>>> base = importr('base')
+>>> base.scan._prm_translate
+{'blank_lines_skip': 'blank.lines.skip',
+ 'comment_char': 'comment.char',
+ 'multi_line': 'multi.line',
+ 'na_strings': 'na.strings',
+ 'strip_white': 'strip.white'}
+
 
 .. automodule:: rpy2.robjects.packages
    :members:
@@ -967,8 +1003,13 @@ one will consult an R-related documentation if unsure of how to
 do so.
 
 
-OOP with R
-==========
+Working with R's OOPs
+=====================
+
+Object-Oriented Programming can a achieved in R, but in more than
+one way. Beside the *official* S3 and S4 systems, there is a rich
+ecosystem of alternative implementations of objects (aroma, or proto
+are two such systems).
 
 S3 objects
 ----------
@@ -976,13 +1017,122 @@ S3 objects
 S3 objects are default R objects (i.e., not S4 instances) for which
 an attribute "class" has been added.
 
+>>> x = robjects.IntVector((1, 3))
+>>> tuple(x.rclass)
+('integer',)
+
+Making the object x an instance of a class *pair*, itself inheriting from
+*integer* is only a matter of setting the attribute:
+
+>>> x.rclass = robjects.StrVector(("pair", "integer"))
+>>> tuple(x.rclass)
+('pair', 'integer')
+
+Methods for *S3* classes are simply R functions with a name such as name.<class_name>,
+the dispatch being made at run-time from the first argument in the function call.
+
+For example, the function *plot.lm* plots objects of class *lm*. The call
+*plot(something)* will see R extract the class name of the object something, and see
+if a function *plot.<class_of_something>* is in the search path.
+
+.. note::
+
+   This rule is not strict as there can exist functions with a *dot* in their name
+   and the part after the dot not correspond to an S3 class name. 
+
 
 S4 objects
 ----------
 
+S4 objects are a little more formal regarding their class definition, and all
+instances belong to the low-level R type SEXPS4.
+
+The definition of methods for a class can happen anytime after the class has
+been defined (a practice something referred to as *monkey patching*
+or *duck punching* in the Python world).
+
+There are obviously many ways to try having a mapping between R classes and Python
+classes, and the one proposed here is to make Python classes that inherit
+:class:`rpy2.rinterface.methods.RS4`.
+
+Since the S4 system allows polymorphic definition of methods, that is for a given
+method name there can exist several list of possible arguments and type for
+the arguments, it currently
+appears trickly to have an simple, automatic, and robust mapping of R
+methods to Python methods. For the time being, one will rely on
+human-written mappings, although some helpers are provided by rpy2.
+
+.. note::
+   More automation for reflecting S4 class definitions into Python is on the list
+   of items to be worked on, so one may hope for more in a following release.
+
+
+To make this a little more concrete, we take the R class `lmList`
+in the package `lme4` and show how to write a Python wrapper for it.
+
+.. warning::
+
+   The R package `lme4` is not distributed with R, and will have to be installed
+   for the example to work.
+
+First, a bit of boilerplate code is needed. We obviously 
+import the higher-level interface, as well the function 
+:func:`rpy2.robjects.packages.importr`. The R class we want to represent
+is defined in the 
+:mod:`rpy2` modules and utilities. 
+
+.. literalinclude:: _static/demos/s4classes.py
+   :start-after: #-- setup-begin
+   :end-before:  #-- setup-end
+
+Once done, the Python class definition can be written.
+In the first part of that code, we choose a static mapping of the
+R-defined methods. The advantage for doing so is a bit of speed
+(as the S4 dispatch mechanism has a cost), and the disadvantage
+is that the a modification of the method at the R level would require
+a refresh of the mappings concerned. The second part of the code
+is wrapper to those mappings, where Python-to-R operations prior
+to calling the R method can be performed.
+In the last part of the class definition, a *static methods* is defined.
+This is one way to have polymorphic constructors implemented.
+
+.. literalinclude:: _static/demos/s4classes.py
+   :start-after: #-- LmList-begin
+   :end-before:  #-- LmList-end
+
+Creating a instance of :class:`LmList` can now be achieved by specifying
+a model as a :class:`Formula` and a dataset.
+
+.. literalinclude:: _static/demos/s4classes.py
+   :start-after: #-- buildLmList-begin
+   :end-before:  #-- buildLmList-end
+
+A drawback of the approach above is that the R "call" is stored,
+and as we are passing the :class:`DataFrame` *sleepstudy* 
+(and as it is believed to to be an anonymous structure by R) the call
+is lengthy as it comprise the explicit structure description of the data frame.
+(try to print *lml1*). This becomes hardly acceptable as datasets grow bigger.
+An alternative to that is to store the columns of the data frame into
+the environment for the :class:`Formula`, as shown below:
+
+.. literalinclude:: _static/demos/s4classes.py
+   :start-after: #-- buildLmListBetterCall-begin
+   :end-before:  #-- buildLmListBetterCall-end
+
+
 .. autoclass:: rpy2.robjects.methods.RS4(sexp)
    :show-inheritance:
    :members:
+
+
+Automated mapping of user-defined classes
+-----------------------------------------
+
+Once a Python class mirroring an R classis defined, the mapping can be made
+automatic by adding new rules to the conversion system
+(see Section :ref:`robjects-conversion`).
+
+
 
 
 

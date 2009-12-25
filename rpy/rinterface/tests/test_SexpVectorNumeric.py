@@ -6,7 +6,7 @@ import rpy2.rinterface as rinterface
 try:
     import numpy
     has_Numpy = True
-except ImportError as ie:
+except ImportError:
     hasNumpy = False
 
 

@@ -148,13 +148,18 @@ Package *ggplot2*
 Introduction
 ------------
 
-The R package *ggplot2* is expected to be installed in the *R*
+The R package *ggplot2* implements the Grammar of Graphics.
+While more documentation on the package and its usage with R can be found
+on the `ggplot2 website`_, this section will introduce the basic concepts required
+to build plots. Obviously, the *R* package *ggplot2* is expected to be installed in the *R*
 used from *rpy2*.
 
-The package is using the *grid* lower-level plotting infrastructure, modelled in 
-:mod:`rpy2.robjects.lib.grid`. Whenever separate plots on the same device,
-or arbitrary graphical elements overlaid, are wished it may require interacting
-with that infrastructure.
+.. _ggplot2 website: http://had.co.nz/ggplot2/
+ 
+The package is using the *grid* lower-level plotting infrastructure, that can be accessed
+through the module :mod:`rpy2.robjects.lib.grid`. Whenever separate plots on the same device,
+or arbitrary graphical elements overlaid, or significant plot customization, or editing
+are needed, some knowledge of *grid* will be required.
 
 Here again, having data in a :class:`DataFrame` is expected
 (see :ref:`robjects-dataframes` for more information on such objects).
@@ -190,7 +195,7 @@ graphical representations.
 Like it was shown for *lattice*, a third variable can be represented
 on the same plot using color encoding, and this is now done by
 specifying that as a mapping (the parameter *col* when calling
-the :class:`Aes`):
+the constructor for the :class:`AesString`):
 
 .. literalinclude:: _static/demos/graphics.py
    :start-after: #-- ggplot2mtcarscolcyl-begin
@@ -329,7 +334,7 @@ The constructor for :class:`GeomSmooth` also accepts a parameter
 
 
 Encoding the information in the column *cyl* is again
-only a matter of specifying it in the :class:`AES` mapping.
+only a matter of specifying it in the :class:`AesString` mapping.
 
 .. literalinclude:: _static/demos/graphics.py
    :start-after: #-- ggplot2smoothbycylwithcolours-begin
@@ -437,9 +442,9 @@ Package *grid*
 
 The *grid* package is the underlying plotting environment for *lattice*
 and *ggplot2* figures. In few words, it consists in pushing and poping systems
-of coordinates (*viewports*) into a stack, 
-and plotting graphical elements into them.
-
+of coordinates (*viewports*) into a stack, and plotting graphical elements into them.
+The system can be thought of as a scene graph, with each *viewport* a node in
+the graph.
 
 >>> from rpy2.robjects.lib import grid
 
@@ -462,26 +467,20 @@ Pushing into the current viewport, can be done by using the class method
 
 Example:
 
-.. code-block:: python
+.. literalinclude:: _static/demos/graphics.py
+   :start-after: #-- grid-begin
+   :end-before: #-- grid-end
+   
+.. image:: _static/graphics_grid.png
+   :scale: 50
 
-   # create a rows/columns layout
-   lt = grid.layout(1, 3)
-   vp = grid.viewport(layout = lt)
-   # push it the plotting stack
-   vp.push()
 
-   # create a viewport located at (1,1) in the layout
-   vp = grid.Viewport(**{'layout.pos.col':1, 'layout.pos.row': 1})
-   # create a (unit) rectangle in that viewport
-   grid.rect(vp = vp).draw()
-
-   vp = grid.Viewport(**{'layout.pos.col':2, 'layout.pos.row': 1})
-   # create text in the viewport at (1,2)
-   grid.text("foo", vp = vp).draw()
-
-   vp = grid.Viewport(**{'layout.pos.col':3, 'layout.pos.row': 1})
-   # create a (unit) circle in the viewport (1,3)
-   grid.circle(vp = vp).draw()
+.. literalinclude:: _static/demos/graphics.py
+   :start-after: #-- gridwithggplot2-begin
+   :end-before: #-- gridwithggplot2-end
+   
+.. image:: _static/graphics_ggplot2withgrid.png
+   :scale: 50
 
 .. autoclass:: rpy2.robjects.lib.grid.Viewport(o)
    :show-inheritance:

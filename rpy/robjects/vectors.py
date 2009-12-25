@@ -12,7 +12,8 @@ baseenv_ri = rinterface.baseenv
 utils_ri = rinterface.baseenv['as.environment'](rinterface.StrSexpVector(("package:utils", )))
 
 class ExtractDelegator(object):
-    """ Delegate the R 'extraction' of items in a vector
+    """ Delegate the R 'extraction' ("[") and 'replacement' ("[<-")
+    of items in a vector
     or vector-like object. This can help making syntactic
     niceties possible."""
     
@@ -51,7 +52,7 @@ class ExtractDelegator(object):
     def __getitem__(self, item):
         fun = self._extractfunction
         args = rlc.TaggedList(item)
-        for i, k,v in enumerate(args.iteritems()):
+        for i, (k, v) in enumerate(args.iteritems()):
             args[i] = conversion.py2ro(v)
         args.insert(0, self._parent)
         res = fun.rcall(args.items())
@@ -61,7 +62,7 @@ class ExtractDelegator(object):
     def __setitem__(self, item, value):
         """ Assign a given value to a given index position in the vector """
         args = rlc.TaggedList.from_iteritems(item)
-        for i, (k,v) in enumerate(args.iteritems()):
+        for i, (k, v) in enumerate(args.iteritems()):
             args[i] = conversion.py2ro(v)       
         args.append(conversion.py2ro(value), tag = None)
         args.insert(0, self._parent, tag = None)
@@ -73,7 +74,10 @@ class ExtractDelegator(object):
 
 
 class DoubleExtractDelegator(ExtractDelegator):
-
+    """ Delegate the R 'extraction' ("[[") and "replacement" ("[[<-")
+    of items in a vector
+    or vector-like object. This can help making syntactic
+    niceties possible."""
     _extractfunction = rinterface.baseenv['[[']
     _replacefunction = rinterface.baseenv['[[<-']
 
@@ -82,8 +86,7 @@ class DoubleExtractDelegator(ExtractDelegator):
 class VectorOperationsDelegator(object):
     """
     Delegate operations such as __getitem__, __add__, etc..
-    to an R call of the corresponding function on its parent
-    attribute.
+    to the corresponding R function.
     This permits a convenient coexistence between
     operators on Python sequence object with their R conterparts.
     """
@@ -127,9 +130,9 @@ class VectorOperationsDelegator(object):
 
 
 class Vector(RObjectMixin, rinterface.SexpVector):
-    """ R vector-like object. Items in those instances can
-       be accessed with the method "__getitem__" ("[" operator),
-       or with the method "subset"."""
+    """ R vector-like object. Items can be accessed with:
+    - the method "__getitem__" ("[" operator)
+    - the delegators rx or rx2 """
     _sample = rinterface.baseenv['sample']
 
     def __init__(self, o):
@@ -139,13 +142,6 @@ class Vector(RObjectMixin, rinterface.SexpVector):
         self.ro = VectorOperationsDelegator(self)
         self.rx = ExtractDelegator(self)
         self.rx2 = DoubleExtractDelegator(self)
-
-    def subset(self, *args, **kwargs):
-        #FIXME: remove this method
-        return self.rx(*args, **kwargs)
-        
-    def assign(self, index, value):
-        self.rx[index] = value
 
     def __add__(self, x):
         res = baseenv_ri.get("c")(self, conversion.py2ri(x))
@@ -191,7 +187,9 @@ class Vector(RObjectMixin, rinterface.SexpVector):
 
 class StrVector(Vector):
     """ Vector of string elements """
+
     _factorconstructor = rinterface.baseenv['factor']
+
     def __init__(self, obj):
         obj = rinterface.StrSexpVector(obj)
         super(StrVector, self).__init__(obj)
@@ -492,35 +490,3 @@ class DataFrame(Vector):
         res = self._write_csv(path, append = append)
         return res
     
-class Function(RObjectMixin, rinterface.SexpClosure):
-    """ An R function.
-    
-    """
-
-    __formals = baseenv_ri.get('formals')
-    __local = baseenv_ri.get('local')
-    __call = baseenv_ri.get('call')
-    __assymbol = baseenv_ri.get('as.symbol')
-    __newenv = baseenv_ri.get('new.env')
-
-    _local_env = None
-
-    def __init__(self, *args, **kwargs):
-        super(Function, self).__init__(*args, **kwargs)
-        self._local_env = self.__newenv(hash=rinterface.BoolSexpVector((True, )))
-
-    def __call__(self, *args, **kwargs):
-        new_args = [conversion.py2ri(a) for a in args]
-        new_kwargs = {}
-        for k, v in kwargs.iteritems():
-            new_kwargs[k] = conversion.py2ri(v)
-        res = super(Function, self).__call__(*new_args, **new_kwargs)
-        res = conversion.ri2py(res)
-        return res
-
-    def formals(self):
-        """ Return the signature of the underlying R function 
-        (as the R function 'formals()' would). """
-        res = self.__formals(self)
-        res = conversion.ri2py(res)
-        return res
