@@ -2,7 +2,7 @@ import os, sys
 
 try:
     R_HOME = (os.environ["R_HOME"], )
-except KeyError as ke:
+except KeyError:
     R_HOME = os.popen("R RHOME").readlines()
 
 if len(R_HOME) == 0:
@@ -15,7 +15,7 @@ if len(R_HOME) == 0:
                                          0, win32con.KEY_QUERY_VALUE )
             R_HOME = win32api.RegQueryValueEx(hkey, "InstallPath")[0]
             win32api.RegCloseKey( hkey )
-        except ImportError as ie:
+        except ImportError:
             raise RuntimeError(
                 "No environment variable R_HOME could be found, "
                 "calling the command 'R RHOME' does not return anything, " +\

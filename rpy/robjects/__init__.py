@@ -12,27 +12,26 @@ import itertools
 import rpy2.rinterface as rinterface
 import rpy2.rlike.container as rlc
 
-import rpy2.robjects.conversion
+import conversion
 
 from rpy2.robjects.robject import RObjectMixin, RObject
 from rpy2.robjects.methods import RS4
 from rpy2.robjects.vectors import *
+from rpy2.robjects.functions import Function, SignatureTranslatedFunction
 
-
-parse = rinterface.baseenv['parse']
-reval = rinterface.baseenv['eval']
+_parse = rinterface.baseenv['parse']
+_reval = rinterface.baseenv['eval']
 # missing values
-NA_real = reval(parse(text = rinterface.StrSexpVector(("NA_real_", ))))
-NA_integer = reval(parse(text = rinterface.StrSexpVector(("NA_integer_", ))))
-NA_bool = reval(parse(text = rinterface.StrSexpVector(("NA", ))))
-NA_character = reval(parse(text = rinterface.StrSexpVector(("NA_character_", ))))
-NA_complex = reval(parse(text = rinterface.StrSexpVector(("NA_complex_", ))))
+NA_real = _reval(_parse(text = rinterface.StrSexpVector(("NA_real_", ))))
+NA_integer = _reval(_parse(text = rinterface.StrSexpVector(("NA_integer_", ))))
+NA_bool = _reval(_parse(text = rinterface.StrSexpVector(("NA", ))))
+NA_character = _reval(_parse(text = rinterface.StrSexpVector(("NA_character_", ))))
+NA_complex = _reval(_parse(text = rinterface.StrSexpVector(("NA_complex_", ))))
 # NULL
-NULL = reval(parse(text = rinterface.StrSexpVector(("NULL", ))))
+NULL = _reval(_parse(text = rinterface.StrSexpVector(("NULL", ))))
 # TRUE/FALSE
-TRUE = reval(parse(text = rinterface.StrSexpVector(("TRUE", ))))
-FALSE = reval(parse(text = rinterface.StrSexpVector(("FALSE", ))))
-del(parse)
+TRUE = _reval(_parse(text = rinterface.StrSexpVector(("TRUE", ))))
+FALSE = _reval(_parse(text = rinterface.StrSexpVector(("FALSE", ))))
 
 
 
@@ -50,7 +49,7 @@ def default_ri2py(o):
     res = None
     try:
         rcls = o.do_slot("class")[0]
-    except LookupError as le:
+    except LookupError:
         rcls = None
 
     if isinstance(o, RObject):
@@ -65,7 +64,7 @@ def default_ri2py(o):
                     res = vectors.Matrix(o)
                 else:
                     res = vectors.Array(o)
-            except LookupError as le:
+            except LookupError:
                 if o.typeof == rinterface.INTSXP:
                     if rcls == 'factor':
                         res = vectors.FactorVector(o)
@@ -81,7 +80,7 @@ def default_ri2py(o):
                     res = vectors.Vector(o)
 
     elif isinstance(o, rinterface.SexpClosure):
-        res = Function(o)
+        res = SignatureTranslatedFunction(o)
     elif isinstance(o, rinterface.SexpEnvironment):
         res = Environment(o)
     elif isinstance(o, rinterface.SexpS4):
@@ -115,7 +114,7 @@ def default_py2ri(o):
             raise(ValueError("Nothing can be done for this array type at the moment."))
     elif isinstance(o, bool):
         res = rinterface.SexpVector([o, ], rinterface.LGLSXP)
-    elif isinstance(o, int):
+    elif isinstance(o, int) or isinstance(o, long):
         res = rinterface.SexpVector([o, ], rinterface.INTSXP)
     elif isinstance(o, float):
         res = rinterface.SexpVector([o, ], rinterface.REALSXP)
@@ -225,7 +224,7 @@ class R(object):
 
         try:
             return self[attr]
-        except LookupError as le:
+        except LookupError:
             raise orig_ae
 
     def __getitem__(self, item):

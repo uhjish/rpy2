@@ -1,9 +1,12 @@
 import rpy2.rinterface as rinterface
 import rpy2.robjects.lib
 import rpy2.robjects.conversion as conversion
+from rpy2.robjects.functions import SignatureTranslatedFunction
+from rpy2.robjects import NULL
 
-require = rinterface.baseenv['require']
-as_env = rinterface.baseenv['as.environment']
+_require = rinterface.baseenv['require']
+_as_env = rinterface.baseenv['as.environment']
+
 
 class Package(object):
     """ Models an R package
@@ -57,19 +60,33 @@ class Package(object):
             self.__dict__[rpyname] = rpyobj
 
 
+
+
+class SignatureTranslatedPackage(Package):
+    def __fill_rpy2r__(self):
+        super(SignatureTranslatedPackage, self).__fill_rpy2r__()
+        for name, robj in self.__dict__.iteritems():
+            if isinstance(robj, rinterface.Sexp) and robj.typeof == rinterface.CLOSXP:
+                self.__dict__[name] = SignatureTranslatedFunction(self.__dict__[name])
+
+
 class LibraryError(ImportError):
     """ Error occuring when importing an R library """
     pass
 
 
-def importr(name, translation = {}):
+def importr(name, robject_translations = {}, signature_translation = True):
     """ Import an R package (and return a module-like object). """
-    ok = require(rinterface.StrSexpVector([name, ]))[0]
+    ok = _require(rinterface.StrSexpVector([name, ]))[0]
     if not ok:
         raise LibraryError("The R package %s could not be imported" %name)
-    env = as_env(rinterface.StrSexpVector(['package:'+name, ]))
-    pack = Package(env, name, translation = translation)
-
+    env = _as_env(rinterface.StrSexpVector(['package:'+name, ]))
+    if signature_translation:
+        pack = SignatureTranslatedPackage(env, name, 
+                                          translation = robject_translations)
+    else:
+        pack = Package(env, name, translation = robject_translations)
+        
     return pack
 
 

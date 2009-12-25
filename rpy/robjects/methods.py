@@ -1,6 +1,6 @@
 from rpy2.robjects.robject import RObjectMixin
 import rpy2.rinterface as rinterface
-import rpy2.robjects.conversion
+import conversion
 
 getmethod = rinterface.baseenv.get("getMethod")
 
@@ -10,11 +10,15 @@ require(rinterface.StrSexpVector(('methods', )),
 
 
 class RS4(RObjectMixin, rinterface.SexpS4):
+    """ Python representation of an R instance of class 'S4'. """
 
     def slotnames(self):
         """ Return the 'slots' defined for this object """
         return methods_env['slotNames'](self)
     
+    def do_slot(self, name):
+        return conversion.ri2py(super(RS4, self).do_slot(name))
+
     @staticmethod
     def isclass(name):
         """ Return whether the given name is a defined class. """
@@ -28,18 +32,17 @@ class RS4(RObjectMixin, rinterface.SexpS4):
         return methods_env['validObject'](self, test = test,
                                           complete = complete)[0]
 
-
 class RS4_Type(type):
     def __new__(mcs, name, bases, cls_dict):
 
         try:
             cls_rname = cls_dict['__rname__']
-        except KeyError as ke:
+        except KeyError:
             cls_rname = name
 
         try:
             accessors = cls_dict['__accessors__']
-        except KeyError as ke:
+        except KeyError:
             accessors = []
             
         for rname, where, \
