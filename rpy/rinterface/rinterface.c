@@ -1487,7 +1487,6 @@ static PyObject*
 Sexp___setstate__(PyObject *self, PyObject *state)
 {
 
-  PyObject *res_string;
   Py_INCREF(Py_None);
   return Py_None;
 
