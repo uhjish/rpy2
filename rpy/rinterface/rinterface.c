@@ -2831,7 +2831,7 @@ EnvironmentSexp_subscript(PyObject *self, PyObject *key)
   name = PyBytes_AsString(key);
 
   if (strlen(name) == 0) {
-    PyErr_Format(PyExc_KeyError, name);
+    PyErr_Format(PyExc_KeyError, "%s", name);
     return NULL;
   }
 
