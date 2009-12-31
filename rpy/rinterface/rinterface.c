@@ -1863,6 +1863,7 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
   SEXP call_R, c_R, res_R;
   int largs, lkwds;
   SEXP tmp_R, fun_R;
+  int protect_count = 0;
   
   largs = lkwds = 0;
   if (args)
@@ -1888,7 +1889,7 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
 
   int arg_i;
   PyObject *tmp_obj; /* temp object to iterate through the args tuple*/
-  int protect_count = 0;
+
   for (arg_i=0; arg_i<largs; arg_i++) {
     tmp_obj = PyTuple_GetItem(args, arg_i);
     if (PyObject_TypeCheck(tmp_obj, &Sexp_Type)) {
@@ -1954,13 +1955,13 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
       if (PyObject_TypeCheck(argValue, &Sexp_Type)) {
 	tmp_R = RPY_SEXP((PySexpObject *)argValue);
       } else {
-	  RPY_PYSCALAR_RVECTOR(tmp_obj, tmp_R);
+	  RPY_PYSCALAR_RVECTOR(argValue, tmp_R);
 	  if (tmp_R == NULL) {
 	    PyErr_Format(PyExc_ValueError, 
 			 "All named parameters must be of type Sexp_Type, "
 			 "or Python int/long, or float, or bool, or None."
 			 );
-	    Py_DECREF(tmp_obj);     
+	    Py_DECREF(argValue);     
 	    Py_XDECREF(citems);
 	    goto fail;
 	  }
@@ -1996,7 +1997,7 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
 /*     UNPROTECT(2); */
 /*     return NULL; */
 /*   } */
-  UNPROTECT(2);
+  UNPROTECT(2 + protect_count);
 
 
   if (! res_R) {
@@ -2015,7 +2016,7 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
   return res;
   
  fail:
-  UNPROTECT(1);
+  UNPROTECT(1 + protect_count);
   embeddedR_freelock();
   return NULL;
 
@@ -2061,7 +2062,8 @@ Sexp_rcall(PyObject *self, PyObject *args)
   SEXP call_R, c_R, res_R;
   int nparams;
   SEXP tmp_R, fun_R;
-  
+  int protect_count = 0;
+
   if (! PySequence_Check(args)) {
     PyErr_Format(PyExc_ValueError, 
                  "The one argument to the function must implement the sequence protocol.");
@@ -2083,7 +2085,6 @@ Sexp_rcall(PyObject *self, PyObject *args)
 
   int arg_i;
   PyObject *tmp_obj;
-  int is_PySexpObject;
 
   /* named args */
   PyObject *argValue, *argName;
@@ -2121,14 +2122,22 @@ Sexp_rcall(PyObject *self, PyObject *args)
     }
     /* Then take care of the value associated with that name. */
     argValue = PyTuple_GetItem(tmp_obj, 1);
-    is_PySexpObject = PyObject_TypeCheck(argValue, &Sexp_Type);
-    if (! is_PySexpObject) {
-      PyErr_Format(PyExc_ValueError, 
-                   "All parameters must be of type Sexp_Type.");
-      goto fail;
+
+    if (PyObject_TypeCheck(argValue, &Sexp_Type)) {
+      tmp_R = RPY_SEXP((PySexpObject *)argValue);
+    } else {
+      RPY_PYSCALAR_RVECTOR(argValue, tmp_R);
+      if (tmp_R == NULL) {
+	PyErr_Format(PyExc_ValueError, 
+		     "All named parameters must be of type Sexp_Type, "
+		     "or Python int/long, or float, or bool, or None."
+		     );
+	Py_DECREF(argValue);     
+	Py_XDECREF(citems);
+	goto fail;
+      }
     }
-    tmp_R = RPY_SEXP((PySexpObject *)argValue);
-    /* tmp_R = Rf_duplicate(tmp_R); */
+    
     if (! tmp_R) {
       PyErr_Format(PyExc_ValueError, "NULL SEXP.");
       goto fail;
@@ -2153,7 +2162,7 @@ Sexp_rcall(PyObject *self, PyObject *args)
 /*     UNPROTECT(2); */
 /*     return NULL; */
 /*   } */
-  UNPROTECT(2);
+  UNPROTECT(2 + protect_count);
   /* Py_END_ALLOW_THREADS */
 
   if (! res_R) {
@@ -2172,7 +2181,7 @@ Sexp_rcall(PyObject *self, PyObject *args)
   return res;
   
  fail:
-  UNPROTECT(1);
+  UNPROTECT(1 + protect_count);
   embeddedR_freelock();
   return NULL;
 
