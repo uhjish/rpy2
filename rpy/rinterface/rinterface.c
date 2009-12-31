@@ -1887,19 +1887,25 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
   c_R = CDR(c_R);
 
   int arg_i;
-  PyObject *tmp_obj;
-  int is_PySexpObject;
+  PyObject *tmp_obj; /* temp object to iterate through the args tuple*/
+  int protect_count = 0;
   for (arg_i=0; arg_i<largs; arg_i++) {
     tmp_obj = PyTuple_GetItem(args, arg_i);
-    is_PySexpObject = PyObject_TypeCheck(tmp_obj, &Sexp_Type);
-    if (! is_PySexpObject) {
-      PyErr_Format(PyExc_ValueError, 
-                   "All parameters must be of type Sexp_Type.");
-      Py_DECREF(tmp_obj);
-      goto fail;
+    if (PyObject_TypeCheck(tmp_obj, &Sexp_Type)) {
+      tmp_R = RPY_SEXP((PySexpObject *)tmp_obj);
+      /* tmp_R = Rf_duplicate(tmp_R); */
+    } else {
+      RPY_PYSCALAR_RVECTOR(tmp_obj, tmp_R);
+      if (tmp_R == NULL) {
+	PyErr_Format(PyExc_ValueError, 
+		     "All parameters must be of type Sexp_Type,"
+		     "or Python int/long, float, bool, or None"
+		     );
+	Py_DECREF(tmp_obj);
+	goto fail;
+      }
     }
-    tmp_R = RPY_SEXP((PySexpObject *)tmp_obj);
-    /* tmp_R = Rf_duplicate(tmp_R); */
+    
     if (! tmp_R) {
       PyErr_Format(PyExc_ValueError, "An unnamed parameter is a NULL SEXP.");
       Py_DECREF(tmp_obj);
@@ -1944,25 +1950,28 @@ Sexp_call(PyObject *self, PyObject *args, PyObject *kwds)
       }
       
       argValue = PyTuple_GetItem(tmp_obj, 1);
-      is_PySexpObject = PyObject_TypeCheck(argValue, &Sexp_Type);
-      if (! is_PySexpObject) {
-        if ( argValue == Py_None ) {
-          argValue = (PyObject *)rpy_R_NilValue;
-        } else {
-          PyErr_Format(PyExc_ValueError, 
-                       "All named parameters must be of type Sexp_Type or None");
-          Py_DECREF(tmp_obj);     
-          Py_XDECREF(citems);
-          goto fail;
-        }
+      
+      if (PyObject_TypeCheck(argValue, &Sexp_Type)) {
+	tmp_R = RPY_SEXP((PySexpObject *)argValue);
+      } else {
+	  RPY_PYSCALAR_RVECTOR(tmp_obj, tmp_R);
+	  if (tmp_R == NULL) {
+	    PyErr_Format(PyExc_ValueError, 
+			 "All named parameters must be of type Sexp_Type, "
+			 "or Python int/long, or float, or bool, or None."
+			 );
+	    Py_DECREF(tmp_obj);     
+	    Py_XDECREF(citems);
+	    goto fail;
+	  }
       }
+	
       Py_DECREF(tmp_obj);
       tmp_R = RPY_SEXP((PySexpObject *)argValue);
       /* SET_NAMED(tmp_R, 2); */
       /* tmp_R = Rf_duplicate(tmp_R); */
       if (! tmp_R) {
         PyErr_Format(PyExc_ValueError, "A named parameter is a NULL SEXP.");
-        Py_DECREF(tmp_obj);
         Py_XDECREF(citems);
         goto fail;
       }
