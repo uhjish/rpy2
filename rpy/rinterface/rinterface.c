@@ -2667,9 +2667,10 @@ VectorSexp_ass_item(PyObject *object, Py_ssize_t i, PyObject *val)
     SET_STRING_ELT(*sexp, i_R, STRING_ELT(*sexp_val, 0));
     break;
   case VECSXP:
-    PROTECT(sexp_copy = Rf_duplicate(*sexp_val));
-    SET_VECTOR_ELT(*sexp, i_R, sexp_copy);
-    UNPROTECT(1);
+/*     PROTECT(sexp_copy = Rf_duplicate(*sexp_val)); */
+/*     SET_VECTOR_ELT(*sexp, i_R, sexp_copy); */
+    SET_VECTOR_ELT(*sexp, i_R, sexp_val);
+/*     UNPROTECT(1); */
     break;
   default:
     PyErr_Format(PyExc_ValueError, "Cannot handle typeof '%d'", 
