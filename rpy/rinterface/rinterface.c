@@ -3190,9 +3190,10 @@ EnvironmentSexp_ass_subscript(PyObject *self, PyObject *key, PyObject *value)
     return -1;
   }
   SEXP sym = Rf_install(name);
-  PROTECT(sexp_copy = Rf_duplicate(sexp));
-  Rf_defineVar(sym, sexp_copy, rho_R);
-  UNPROTECT(1);
+/*   PROTECT(sexp_copy = Rf_duplicate(sexp)); */
+/*   Rf_defineVar(sym, sexp_copy, rho_R); */
+/*   UNPROTECT(1); */
+  Rf_defineVar(sym, sexp, rho_R);
   embeddedR_freelock();
   return 0;
 }
