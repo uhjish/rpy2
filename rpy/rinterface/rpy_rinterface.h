@@ -23,7 +23,7 @@ typedef Py_ssize_t (*readbufferproc)(PyObject *, Py_ssize_t, void **);
 typedef Py_ssize_t (*writebufferproc)(PyObject *, Py_ssize_t, void **);
 typedef Py_ssize_t (*segcountproc)(PyObject *, Py_ssize_t *);
 typedef Py_ssize_t (*charbufferproc)(PyObject *, Py_ssize_t, char **);
-
+typedef Py_SIZE Py_Size;
 #endif
 
 
