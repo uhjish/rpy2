@@ -31,7 +31,7 @@ NA_real = FloatVector((NA_Real, ))
 NA_integer = IntVector((NA_Integer, ))
 NA_bool = BoolVector((NA_Logical, ))
 NA_character = StrVector((NA_Character, ))
-NA_complex = _reval(_parse(text = rinterface.StrSexpVector(("NA_complex_", ))))
+NA_complex = ComplexVector(_reval(_parse(text = rinterface.StrSexpVector(("NA_complex_", )))))
 
 # NULL
 NULL = _reval(_parse(text = rinterface.StrSexpVector(("NULL", ))))
