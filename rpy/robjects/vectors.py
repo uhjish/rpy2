@@ -5,7 +5,7 @@ import conversion
 
 import rpy2.rlike.container as rlc
 
-import copy, os, itertools
+import copy, os, itertools, time
 
 globalenv_ri = rinterface.globalenv
 baseenv_ri = rinterface.baseenv
@@ -318,6 +318,17 @@ class FactorVector(IntVector):
     isordered = property(__isordered_get, None, None,
                          "are the levels in the factor ordered ?")
 
+class DateVector(FloatVector):
+    def __init__(self, obj):
+        if not isinstance(obj, rinterface.Sexp):
+            #sanity check
+            for elt in obj:
+                if not inherits(elt, time.struct_time):
+                    raise ValueError("""
+When giving a Python sequence, all elements must inherit from time.struct_time""")
+            #convert to an R POSIXlt structure
+            obj = rinterface.StrSexpVector(obj)
+        pass
     
 class Array(Vector):
     """ An R array """
@@ -542,8 +553,10 @@ class DataFrame(Vector):
         sep = conversion.py2ro(sep)
         quote = conversion.py2ro(quote)
         dec = conversion.py2ro(dec)
-        row_names = conversion.py2ro(row_names)
-        col_names = conversion.py2ro(col_names)
+        if row_names is not rinterface.MissingArg:
+            row_names = conversion.py2ro(row_names)
+        if col_names is not rinterface.MissingArg:
+            col_names = conversion.py2ro(col_names)
         fill = conversion.py2ro(fill)
         comment_char = conversion.py2ro(comment_char)
         as_is = conversion.py2ro(as_is)
