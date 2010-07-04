@@ -21,5 +21,6 @@ def suite():
     return alltests
 
 if __name__ == "__main__":
+    print("rpy2 version %s" %rpy2.__version__)
     unittest.main(defaultTest = "suite")
 
