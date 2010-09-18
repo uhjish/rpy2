@@ -118,6 +118,13 @@ class build_ext(_build_ext):
             
         self.library_dirs.extend(r_libs)
 
+        for i, d in enumerate(r_libs):
+            if d.startswith('-L'):
+                r_libs[i] = d[2:]
+            else:
+                pass
+        self.library_dirs.extend(r_libs)
+
         include_dirs = get_rconfig(r_home, '--cppflags')[0].split()
         
         for i, d in enumerate(include_dirs):
