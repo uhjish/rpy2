@@ -106,10 +106,6 @@ class build_ext(_build_ext):
         rversions.append(rversion)
 
         r_libs = []
-        if self.r_home_lib is None:
-            r_libs.extend(get_rconfig(r_home, '--ldflags')[0].split())
-        else:
-            r_libs.extend([self.r_home_lib, ])
 
         if self.r_home_modules is None:
             r_libs.extend([os.path.join(r_home, 'modules'), ])
@@ -140,7 +136,7 @@ class build_ext(_build_ext):
                         get_rconfig(r_home, 'BLAS_LIBS')
 
         for e in self.extensions:
-            e.extra_compile_args.extend(extra_link_args)
+            e.extra_link_args.extend(extra_link_args)
 
     def run(self):
         _build_ext.run(self)
@@ -210,6 +206,7 @@ def get_rconfig(r_home, about, allow_empty = False):
 def getRinterface_ext():
     #r_libs = [os.path.join(RHOME, 'lib'), os.path.join(RHOME, 'modules')]
     r_libs = []
+    extra_link_args = []
 
     #FIXME: crude way (will break in many cases)
     #check how to get how to have a configure step
@@ -249,7 +246,7 @@ def getRinterface_ext():
             define_macros = define_macros,
             runtime_library_dirs = r_libs,
             #extra_compile_args=['-O0', '-g'],
-           
+            extra_link_args = extra_link_args
             )
 
     rpy_device_ext = Extension(
@@ -264,6 +261,7 @@ def getRinterface_ext():
             define_macros = define_macros,
             runtime_library_dirs = r_libs,
             #extra_compile_args=['-O0', '-g'],
+            extra_link_args = extra_link_args
         )
 
     return [rinterface_ext, rpy_device_ext]
