@@ -213,7 +213,45 @@ class RConfig(object):
                       extra_link_args = self._extra_link_args + \
                           config._extra_link_args)
         return res
-
+    @staticmethod
+    def from_string(string, allow_empty = False):
+        possible_patterns = ('^-L(?P<library_dirs>[^ ]+)$',
+                             '^-l(?P<libraries>[^ ]+)$',
+                             '^-I(?P<include_dirs>[^ ]+)$',
+                             '^(?P<framework_dirs>-F[^ ]+?)$',
+                             '^(?P<frameworks>-framework [^ ]+)$')
+        pp = [re.compile(x) for x in possible_patterns]
+        # sanity check of what is returned into rconfig
+        rconfig_m = None        
+        span = (0, 0)
+        rc = RConfig()
+        for substring in string.split(' '):
+            ok = False
+            for pattern in pp:
+                rconfig_m = pattern.match(substring)
+                if rconfig_m is not None:
+                    rc += RConfig(**rconfig_m.groupdict())
+                    span = rconfig_m.span()
+                    ok = True
+                    break
+                elif rconfig_m is None:
+                    if allow_empty and (rconfig == ''):
+                        print(cmd + '\nreturned an empty string.\n')
+                        rc += RConfig()
+                        ok = True
+                        break
+                    else:
+                        # if the configuration points to an existing library, 
+                        # use it
+                        if os.path.exists(string):
+                            rc += RConfig(library = substring)
+                            ok = True
+                            break
+            if not ok:
+                raise ValueError('Invalid substring\n' + substring 
+                                 + '\nin string\n' + string)
+        return rc
+            
 def get_rconfig(r_home, about, allow_empty = False):
     r_exec = os.path.join(r_home, 'bin', 'R')
     cmd = '"'+r_exec+'" CMD config '+about
@@ -223,29 +261,8 @@ def get_rconfig(r_home, about, allow_empty = False):
     if rconfig.startswith("WARNING"):
         rconfig = rp.readline()
     rconfig = rconfig.strip()
-    #sanity check of what is returned into rconfig
-    rconfig_m = None
-    possible_patterns = ('^-L(?P<library_dirs>.+) -l(?P<libraries>.+)$',
-                         '^-l(?P<libraries>.+)$', # fix for -lblas returned
-                         '^(?P<framework_dirs>-F.+?) (?P<frameworks>-framework .+)$', # OS X
-                         '^(?P<frameworks>-framework .+)$',
-                         '^-I(?P<include_dirs>.+)$')
-    pp = [re.compile(x) for x in possible_patterns]
-    for pattern in pp:
-        rconfig_m = pattern.match(rconfig)
-        if rconfig_m is not None:
-            rconfig_m = RConfig(**rconfig_m.groupdict())
-            break
-    if rconfig_m is None:
-        if allow_empty and (rconfig == ''):
-            print(cmd + '\nreturned an empty string.\n')
-            return ()
-        else:
-            # if the configuration points to an existing library, use it
-            if os.path.exists(rconfig):
-                return RConfig(library = rconfig)
-            raise Exception(cmd + '\nreturned\n' + rconfig)
-    return rconfig_m
+    rc = RConfig.from_string(rconfig)
+    return rc
 
 
 def getRinterface_ext():
