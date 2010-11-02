@@ -44,6 +44,10 @@ if sys.platform == 'win32':
     # Load the R dll using the explicit path
     # First try the bin dir:
     Rlib = os.path.join(R_HOME, 'bin', 'R.dll')
+    # From R-2.12, the bin dir appears to have moved
+    # (may be an effort to allow coexisting win32 and win64 installs ?)
+    if not os.path.exists(Rlib):
+        Rlib = os.path.join(R_HOME, 'bin', 'i386', 'R.dll')
     # Then the lib dir:
     if not os.path.exists(Rlib):
         Rlib = os.path.join(R_HOME, 'lib', 'R.dll')
