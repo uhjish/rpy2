@@ -1,10 +1,29 @@
+Release 2.1.8
+=============
+
+Bugs fixed
+----------
+
+- Fixed issue with R arrays with more than 2 dimensions and numpy arrays
+  (issue #47 - backported from the branch 2.2.x).
+
+
+Release 2.1.7
+=============
+
+Bugs fixed
+----------
+
+- More fixes for the automated detection of include and libraries at build time.
+
+
 Release 2.1.6
 =============
 
 Bugs fixed
 ----------
 
-- Further fixes in the automatic detection of includes and libraries
+- Further fixes in the automated detection of includes and libraries
   needed to compile rpy2 against R. The detection code has
   been refactored (backport from the 2.2.x branch)
 
@@ -15,7 +34,7 @@ Release 2.1.5
 Bugs fixed
 ----------
 
-- fixes the automatic detection of R_HOME/lib during building/compiling
+- fixes the automated detection of R_HOME/lib during building/compiling
   when R_HOME/lib is not in lib/ (issue #54)
 
 
