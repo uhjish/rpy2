@@ -88,10 +88,10 @@ grdevices.dev_off()
 grdevices.png('../../_static/graphics_lattice_wireframe_2.png',
     width = 912, height = 612, antialias="subpixel", type="cairo")
 #-- wireframe2-begin
-reshape = importr('reshape')
-dataf = reshape.melt(volcano)
+reshape2 = importr('reshape2')
+dataf = reshape2.melt(volcano)
 dataf = dataf.cbind(ct = lattice.equal_count(dataf.rx2("value"), number=3, overlap=1/4))
-p = lattice.wireframe(Formula('value ~ X1 * X2 | ct'), data = dataf, shade = True,
+p = lattice.wireframe(Formula('value ~ Var1 * Var2 | ct'), data = dataf, shade = True,
                       aspect = FloatVector((61.0/87, 0.4)),
                       light_source = IntVector((10,0,10)))
 rprint(p, nrow = 1)
@@ -534,13 +534,13 @@ gflops_range = [ round(math.log10(min(perfs))),
 # note there's two measurements per line.
 # instead we want data that looks like this:
 # [date, perf, color, perftype] where perftype is perf1 or perf2
-# the right operator for this is "melt" in the "reshape" package
+# the right operator for this is "melt" in the "reshape2" package
 
 # melt from horizontal into vertical format
-df = ro.r.melt(df, 
-               id_var=['Date','color'], 
-               measure=['Perf1','Perf2'], 
-               variable_name='PerfType')
+df = reshape2.melt(df, 
+                   id_var=['Date','color'], 
+                   measure=['Perf1','Perf2'], 
+                   variable_name=['PerfType', ])
 # rename resulting value column to Performance
 df.names[tuple(df.colnames).index('value')] = 'Performance'
 
