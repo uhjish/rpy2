@@ -1,3 +1,12 @@
+Release 2.2.7
+=============
+
+Changes
+-------
+
+- setup.cfg was creating eggs with the 'dev' tag (issue #101)
+
+
 Release 2.2.6
 =============
 
