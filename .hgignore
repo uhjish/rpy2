@@ -1,0 +1,7 @@
+syntax: glob
+build/
+*.pyc
+*~
+.*.swp
+_*.so
+rpy2.egg-info
