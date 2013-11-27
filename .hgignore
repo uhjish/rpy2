@@ -1,0 +1,7 @@
+syntax: glob
+build/
+*.pyc
+*~
+.*.swp
+_*.so
+.DS_Store
