@@ -26,6 +26,9 @@ _kinds = {
 def numpy2ri(o):
     """ Augmented conversion function, converting numpy arrays into
     rpy2.rinterface-level R structures. """
+    # allow array-likes to also function with this module.
+    if not isinstance(o, numpy.ndarray) and hasattr(o, '__array__'):
+        o = o.__array__()
     if isinstance(o, numpy.ndarray):
         if not o.dtype.isnative:
             raise(ValueError("Cannot pass numpy arrays with non-native byte orders at the moment."))
