@@ -2,57 +2,102 @@
 #
 # Test script for the Continuous Integration server drone.io
 
+LOGFILE=`pwd`/'ci.log'
+
 # Define the versions of Python that should be tested
 PYTHON_VERSIONS="2.7 3.3"
 
-# Define the Numpy version to install
-NUMPY_VERSION="1.7.1"
+# Define the target Numpy versions
+NUMPY_VERSIONS="1.7.1 1.8.0"
+
+DEPS_DIR="deps/"
+WHEEL_DIR=$DEPS_DIR"wheelhouse/"
+mkdir -p $WHELL_DIR
+PIPWITHWHEEL_ARGS=" --download-cache /tmp -w $WHEEL_DIR --use-wheel --find-links=file://$WHEEL_DIR"
 
 # Color escape codes
 GREEN='\e[0;32m'
 RED='\e[0;31m'
 NC='\e[0m'
 
-# Install R and numpy dependencies
-sudo apt-get install r-base cython libatlas-dev liblapack-dev gfortran 
+echo "CI on drone.io" > ${LOGFILE}
+
+# Install R, ipython, and pandas
+# Ensure that we get recent versions
+echo -n "Installing packages with APT..."
+sudo add-apt-repository ppa:marutter/rrutter >> ${LOGFILE}
+sudo add-apt-repository ppa:jtaylor/ipython >> ${LOGFILE}
+#sudo add-apt-repository ppa:pythonxy/pythonxy-devel > ${LOGFILE}
+sudo apt-get -y update &>> ${LOGFILE}
+for package in r-base cython libatlas-dev libatlas3gf-base liblapack-dev gfortran ipython=1.1.0-1
+do
+    echo "   ${package}"
+    sudo apt-get -qq -y install ${package} &>> ${LOGFILE};
+done 
+#sudo apt-get -qq -y install pandas >> ${LOGFILE}
+echo "[done]"
 
 # Install ggplot2 r-cran package
+echo -n "Installing R packages..."
 export R_LIBS_USER="$HOME/rlibs/"
 mkdir -p $R_LIBS_USER
-R -e 'install.packages("ggplot2", repos="http://cran.us.r-project.org")'
+R --slave -e 'install.packages("ggplot2", repos="http://cran.us.r-project.org")' &>> ${VERBOSE}
+echo "[done]"
 
 STATUS=0
-
+summary=()
 # Launch tests for each Python version
-for VERSION in $PYTHON_VERSIONS; do
-  echo -e "${GREEN}Test with Python $VERSION ${NC}"
+for PYVERSION in $PYTHON_VERSIONS; do
+  echo -e "${GREEN}Test with Python $PYVERSION ${NC}"
 
   # Create a new virtualenv
-  virtualenv --no-site-packages --python=python$VERSION env-$VERSION/
-  source env-$VERSION/bin/activate
+  virtualenv --python=python$PYVERSION env-$PYVERSION/ >> ${LOGFILE}
+  source env-$PYVERSION/bin/activate
   
   # Upgrade pip and install wheel
-  pip install setuptools --upgrade
-  pip install pip --upgrade
-  pip install wheel
-  
-  # Use the astropy wheels repositories to speedup numpy
-  # installation
-  pip install --use-wheel --find-links http://wheels.astropy.org/ \
-      --find-links http://wheels2.astropy.org/ \
-      numpy==$NUMPY_VERSION pandas ipython
-  
-  # Build rpy2
-  python setup.py build --build-lib build-$VERSION
-  export PYTHONPATH=build-$VERSION/:$PYTHONPATH
-  
-  # Launch tests
-  python -m rpy2.tests
-  if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Tests PASSED for Python ${VERSION}${NC}"
-  else
-    STATUS=1
-    echo -e "${RED}Tests FAILED for Python ${VERSION}${NC}"
-  fi
+  pip install setuptools --upgrade >> ${LOGFILE}
+  pip install -I --download-cache /tmp pip >> ${LOGFILE}
+  pip install -I --download-cache /tmp wheel >> ${LOGFILE}
+
+  for NPVERSION in $NUMPY_VERSIONS; do
+    echo -e "${GREEN}    Numpy version $NPVERSION ${NC}"
+ 
+    pip install --use-wheel --find-links http://cache27diy-cpycloud.rhcloud.com/$PYVERSION \
+	numpy==$NPVERSION >> ${LOGFILE}
+    #pip install --use-wheel --find-links http://cache27diy-cpycloud.rhcloud.com/$PYVERSION cython
+    pip install pandas >> ${LOGFILE}
+
+    # Build rpy2
+    rpy2build=`python setup.py sdist | tail -n 1 | grep -Po "removing \\'\K[^\\']*"`
+    # Install it (so we also test that the source package is correctly built)
+    pip install dist/${rpy2build}.tar.gz
+
+    #DEBUG
+    python -c 'import rpy2.ipython'
+    # Launch tests
+    python -m rpy2.tests
+
+    # Success if passing the tests in at least one configuration
+    if [ $? -eq 0 ]; then
+      msg="${GREEN}Tests PASSED for Python ${PYVERSION} / Numpy ${NPVERSION} ${NC}"
+      echo -e $msg
+      summary+=("$msg") 
+      STATUS=1
+    else
+      msg="${RED}Tests FAILED for Python ${PYVERSION} / Numpy ${NPVERSION} ${NC}"
+      echo -e $msg
+      summary+=("$msg")
+      ((STATUS = 0 || $STATUS))
+    fi
+  done
 done
-exit $STATUS
+for ((i = 0; i < ${#summary[@]}; i++))
+do
+  echo -e ${summary[$i]}
+done
+if [ STATUS==1 ]; then
+  exit 0;
+else
+  exit 1;
+fi
+
