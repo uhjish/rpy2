@@ -9,8 +9,6 @@ from setuptools.command.build_ext import build_ext as _build_ext
 pack_name = 'rpy2'
 pack_version = __import__('rpy').__version__
 
-default_lib_directory = 'bin' if sys.platform=='win32' else 'lib'
-
 package_prefix='.'
 
 class build_ext(_build_ext):
@@ -134,12 +132,10 @@ class RExec(object):
         #Twist if 'R RHOME' spits out a warning
         if output[0].startswith("WARNING"):
             output = output[1:]
-            output = rconfig.strip()
+            output = output.strip()
         return output
 
 def getRinterface_ext():
-    #r_libs = [os.path.join(RHOME, 'lib'), os.path.join(RHOME, 'modules')]
-    r_libs = []
     extra_link_args = []
     extra_compile_args = []
     include_dirs = []
@@ -215,6 +211,17 @@ def getRinterface_ext():
         libraries.extend(args.l)
     extra_link_args.extend(unknown)
     
+    print("""
+    Compilation parameters for rpy2's C components:
+        include_dirs    = %s
+        library_dirs    = %s
+        libraries       = %s
+        extra_link_args = %s
+    """ % (str(include_dirs),
+           str(library_dirs), 
+           str(libraries), 
+           str(extra_link_args)))
+
     rinterface_ext = Extension(
             name = pack_name + '.rinterface._rinterface',
             sources = [os.path.join(package_prefix,
@@ -237,10 +244,10 @@ def getRinterface_ext():
                        ],
             include_dirs = [os.path.join(package_prefix,
                                          'rpy', 'rinterface'),] + include_dirs,
-            libraries = ['R', ],
-            library_dirs = r_libs,
+            libraries = libraries,
+            library_dirs = library_dirs,
             define_macros = define_macros,
-            runtime_library_dirs = r_libs,
+            runtime_library_dirs = library_dirs,
             extra_compile_args=extra_compile_args,
             extra_link_args = extra_link_args
             )
@@ -253,10 +260,10 @@ def getRinterface_ext():
             ],
         include_dirs = include_dirs + 
         [os.path.join('rpy', 'rinterface'), ],
-        libraries = ['R', ],
-        library_dirs = r_libs,
+        libraries = libraries,
+        library_dirs = library_dirs,
         define_macros = define_macros,
-        runtime_library_dirs = r_libs,
+        runtime_library_dirs = library_dirs,
         extra_compile_args=extra_compile_args,
         extra_link_args = extra_link_args
         )
@@ -274,6 +281,11 @@ if __name__ == '__main__':
     #for scheme in setuptools.command.install.INSTALL_SCHEMES.values():
     #    scheme['data'] = scheme['purelib']
 
+
+    requires=[]
+    if sys.version_info[0] < 3 or (sys.version_info[0] == 3 and sys.version_info[1] < 4):
+        requires.append('singledispatch')
+
     setup(
         cmdclass = {'build_ext': build_ext},
         name = pack_name,
@@ -283,6 +295,7 @@ if __name__ == '__main__':
         license = "GPLv2+",
         author = "Laurent Gautier",
         author_email = "lgautier@gmail.com",
+        requires = requires,
         ext_modules = rinterface_exts,
         package_dir = pack_dir,
         packages = [pack_name,

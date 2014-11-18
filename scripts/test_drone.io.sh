@@ -5,15 +5,16 @@
 LOGFILE=`pwd`/'ci.log'
 
 # Define the versions of Python that should be tested
-#PYTHON_VERSIONS="2.7 3.3 3.4"
-PYTHON_VERSIONS="3.3"
+PYTHON_VERSIONS="2.7 3.3 3.4"
+#PYTHON_VERSIONS="3.3"
 
 # Define the target Numpy versions
-NUMPY_VERSIONS="1.8.0"
+NUMPY_VERSIONS="1.9.1"
 
+# Settings to install python packages as wheels
 DEPS_DIR="deps/"
-WHEEL_DIR=$DEPS_DIR"wheelhouse/"
-mkdir -p $WHELL_DIR
+WHEEL_DIR=${DEPS_DIR}"wheelhouse/"
+mkdir -p ${WHEEL_DIR}
 PIPWITHWHEEL_ARGS=" --download-cache /tmp -w $WHEEL_DIR --use-wheel --find-links=file://$WHEEL_DIR"
 
 # Color escape codes
@@ -63,13 +64,22 @@ for PYVERSION in $PYTHON_VERSIONS; do
   for NPVERSION in $NUMPY_VERSIONS; do
     echo -e "${GREEN}    Numpy version $NPVERSION ${NC}"
 
+    echo "Installing packages:"
     for package in numpy==$NPVERSION pandas ipython; do
-	echo "Installing $package with wheel"
+	echo "    $package";
 	pip install --use-wheel \
 	    --find-links http://cache27diy-cpycloud.rhcloud.com/$PYVERSION \
-	    $package >> ${LOGFILE}
+	    $package >> ${LOGFILE};
     done
-
+    if [ '2.7' = $PYVERSION ]; then
+	echo "    singledispatch"
+	pip install singledispatch >> ${LOGFILE}
+    fi;
+    if [ '3.3' = $PYVERSION ]; then
+	echo "    singledispatch"
+	pip install singledispatch >> ${LOGFILE}
+    fi;
+    echo '.'
     #pip install --use-wheel --find-links http://cache27diy-cpycloud.rhcloud.com/$PYVERSION cython
 
     echo "Building rpy2"
@@ -97,11 +107,12 @@ for PYVERSION in $PYTHON_VERSIONS; do
     fi
   done
 done
+echo '=========='
 for ((i = 0; i < ${#summary[@]}; i++))
 do
   echo -e ${summary[$i]}
 done
-if [ STATUS==1 ]; then
+if [ $STATUS -eq 1 ]; then
   exit 0;
 else
   exit 1;
