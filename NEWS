@@ -8,7 +8,7 @@ New features
   or the definition of the environment variables `R_ENVIRON' or
   `R_ENVIRON_USER` with a warning. (issue #204)
 
-- Move console writting callback to use `ptr_R_WriteConsoleEx`
+- Moved console writting callback to use `ptr_R_WriteConsoleEx`
   rather than `ptr_R_WriteConsole`. This allows to callbacks
   for warnings and messages. `get/set_writeconsole` is now 
   replaced by `get/set_writeconsole_regular` (regular
@@ -26,6 +26,16 @@ Bugs fixed
   caused console output whenever an error occurred. Moving to
   the seeming experimental `tryEvalSilent` makes evaluations more
   quiet.
+
+
+Release 2.5.5
+=============
+
+Bugs fixed
+----------
+
+- Crash (segfault) when querying an R object in an R environment triggers an
+  error (symbol exists, but associated values resolves to an error - issue #251)
 
 
 Release 2.5.4
