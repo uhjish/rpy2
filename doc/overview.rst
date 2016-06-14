@@ -94,13 +94,13 @@ While Python 3.3 is supported, earlier version of Python 3 are not
 
 Rpy2 is not expected to work at all with an R version < 2.8. The use of the
 latest rpy2 with an R version older than the current release is not
-adviced (and mostly unsupported).
+advised (and mostly unsupported).
 
 Alternative Python implementations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CPython is the target implementation, and because of presence of C code
-in rpy2 is it currently not possible to run the package on Jython.
+in rpy2, it is currently not possible to run the package on Jython.
 For that same reason, running it with Pypy is expected to require
 some effort.
 
