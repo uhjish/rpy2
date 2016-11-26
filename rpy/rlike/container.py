@@ -27,7 +27,6 @@ class OrdDict(dict):
 
         super(OrdDict, self).__init__()
         self.__l = []
-        l = self.__l
 
         for k,v in c:
             self[k] = v
@@ -96,11 +95,6 @@ class OrdDict(dict):
     def index(self, k):
         """ Return the index (rank) for the key 'k' """
         return super(OrdDict, self).__getitem__(k)
-
-    def items(self):
-        """ Return an ordered list of all key/value pairs """
-        res = [self.byindex(i) for i in range(len(self.__l))]
-        return tuple(res)
 
     def get(self, k, d = None):
         """ OD.get(k[,d]) -> OD[k] if k in OD, else d.  d defaults to None """
